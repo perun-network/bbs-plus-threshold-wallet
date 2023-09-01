@@ -15,7 +15,9 @@ func uint64ToFr(val uint64) *bls12381.Fr {
 	return fr
 }
 
-// Computes the lagrange coefficient that is to be applied to the evaluation of the polynomial at position evaluation_x for an interpolation to position interpolation_x if the available evaluated positions are defined by indices
+// GetLagrangeCoefficientFr computes the lagrange coefficient that is to be applied to the evaluation of the polynomial
+// at position evaluation_x for an interpolation to position interpolation_x if the available evaluated positions are
+// defined by indices
 func GetLagrangeCoefficientFr(indices []int, evaluationX int, interpolationX int) *bls12381.Fr {
 	top := bls12381.NewFr().One()
 	bot := bls12381.NewFr().One()
@@ -38,12 +40,14 @@ func GetLagrangeCoefficientFr(indices []int, evaluationX int, interpolationX int
 	return top
 }
 
-// Computes the lagrange coefficient that is to be applied to the evaluation of the polynomial at position evaluation_x for an interpolation to position 0 if the available evaluated positions are defined by indices
+// Get0LagrangeCoefficientFr computes the lagrange coefficient that is to be applied to the evaluation of the polynomial
+// at position evaluation_x for an interpolation to position 0 if the available evaluated positions are defined by indices
 func Get0LagrangeCoefficientFr(indices []int, evaluationX int) *bls12381.Fr {
 	return GetLagrangeCoefficientFr(indices, evaluationX, 0)
 }
 
-// Computes all lagrange coefficients for an interpolation to position 0 if the available evaluated positions are defined by indices
+// Get0LagrangeCoefficientSetFr computes all lagrange coefficients for an interpolation to position 0 if the available
+// evaluated positions are defined by indices
 func Get0LagrangeCoefficientSetFr(indices []int) []*bls12381.Fr {
 	coefficients := make([]*bls12381.Fr, len(indices))
 	for i, idx := range indices {
@@ -52,7 +56,7 @@ func Get0LagrangeCoefficientSetFr(indices []int) []*bls12381.Fr {
 	return coefficients
 }
 
-// Generates a t-out-of-n shamir secret sharing of a random element
+// GetShamirSharedRandomElement generates a t-out-of-n shamir secret sharing of a random element
 func GetShamirSharedRandomElement(rng *rand.Rand, t, n int) (*bls12381.Fr, []*bls12381.Fr) {
 	// Generate the secret key element
 	secretKeyElement := bls12381.NewFr()

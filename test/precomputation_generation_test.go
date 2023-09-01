@@ -4,9 +4,10 @@ import (
 	"testing"
 
 	bls12381 "github.com/kilic/bls12-381"
+
 	fhksbbsplus "github.com/perun-network/bbs-plus-threshold-wallet/fhks_bbs_plus"
 	"github.com/perun-network/bbs-plus-threshold-wallet/helper"
-	"github.com/perun-network/bbs-plus-threshold-wallet/precomputation_mockup"
+	"github.com/perun-network/bbs-plus-threshold-wallet/precomputation"
 )
 
 var (
@@ -20,7 +21,7 @@ var (
 )
 
 func TestAllPrecomputationGeneration(t *testing.T) {
-	output := precomputation_mockup.GeneratePCFPCGOutput(seedPre, threshold, n, k)
+	output := precomputation.GeneratePCFPCGOutput(seedPre, threshold, k, n)
 
 	sk := output.Sk
 	skShares := output.SkShares
@@ -31,7 +32,7 @@ func TestAllPrecomputationGeneration(t *testing.T) {
 	asTerms := output.AsTerms
 	askTerms := output.AskTerms
 
-	perPartyPrecomputation := precomputation_mockup.CreatePPPrecomputationFromALLVOLEEvaluation(
+	perPartyPrecomputation := precomputation.CreatePPPrecomputationFromVOLEEvaluation(
 		k, n, skShares, aShares, eShares, sShares, aeTerms, asTerms, askTerms)
 
 	testPCFPCGOutputAeAsAsk(t, k, indices, sk, aShares, eShares, sShares, aeTerms, asTerms, askTerms)
@@ -49,7 +50,7 @@ func testPCFPCGOutputAeAsAsk(t *testing.T,
 	indices [][]int,
 	sk *bls12381.Fr,
 	aShares, eShares, sShares [][]*bls12381.Fr,
-	aeTerms, asTerms, askTerms [][][][2]*bls12381.Fr,
+	aeTerms, asTerms, askTerms [][][]*helper.OLECorrelation,
 ) {
 	for iK := 0; iK < k; iK++ {
 		a := bls12381.NewFr().Zero()
@@ -83,12 +84,12 @@ func testPCFPCGOutputAeAsAsk(t *testing.T,
 				tmpAE := bls12381.NewFr().Zero()
 				tmpAS := bls12381.NewFr().Zero()
 				tmpASK := bls12381.NewFr().Zero()
-				tmpAE.Add(tmpAE, aeTerms[iK][iN-1][jN-1][0])
-				tmpAE.Add(tmpAE, aeTerms[iK][iN-1][jN-1][1])
-				tmpAS.Add(tmpAS, asTerms[iK][iN-1][jN-1][0])
-				tmpAS.Add(tmpAS, asTerms[iK][iN-1][jN-1][1])
-				tmpASK.Add(tmpASK, askTerms[iK][iN-1][jN-1][0])
-				tmpASK.Add(tmpASK, askTerms[iK][iN-1][jN-1][1])
+				tmpAE.Add(tmpAE, aeTerms[iK][iN-1][jN-1].U)
+				tmpAE.Add(tmpAE, aeTerms[iK][iN-1][jN-1].V)
+				tmpAS.Add(tmpAS, asTerms[iK][iN-1][jN-1].U)
+				tmpAS.Add(tmpAS, asTerms[iK][iN-1][jN-1].V)
+				tmpASK.Add(tmpASK, askTerms[iK][iN-1][jN-1].U)
+				tmpASK.Add(tmpASK, askTerms[iK][iN-1][jN-1].V)
 
 				lagrangeCoeff := helper.Get0LagrangeCoefficientFr(indices[iK], jN)
 				tmpASK.Mul(tmpASK, lagrangeCoeff)
