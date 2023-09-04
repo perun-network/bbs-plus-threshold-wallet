@@ -6,7 +6,7 @@ import (
 
 	"github.com/perun-network/bbs-plus-threshold-wallet/fhks_bbs_plus"
 	"github.com/perun-network/bbs-plus-threshold-wallet/helper"
-	"github.com/perun-network/bbs-plus-threshold-wallet/precomputation_mockup"
+	"github.com/perun-network/bbs-plus-threshold-wallet/precomputation"
 )
 
 var (
@@ -37,12 +37,12 @@ func SimpleMeasurementWithCoefficientComputation() {
 	var verifyDurations []time.Duration
 	var directSignDurations []time.Duration
 
-	messages := helper.GetRandomMessagesFromSeed(seedMessages, messageCount, k)
+	messages := helper.GetRandomMessagesFromSeed(seedMessages, k, messageCount)
 
-	directES := helper.GetRandomMessagesFromSeed(seedKeys, 2, k)
+	directES := helper.GetRandomMessagesFromSeed(seedKeys, k, 2)
 
-	sk, preComputation := precomputation_mockup.GeneratePPPrecomputation(
-		seedPresignatures, t, n, k)
+	sk, preComputation := precomputation.GeneratePPPrecomputation(
+		seedPresignatures, t, k, n)
 
 	pk := fhks_bbs_plus.GeneratePublicKey(seedKeys, sk, messageCount)
 
