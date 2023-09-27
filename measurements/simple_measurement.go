@@ -54,7 +54,7 @@ func SimpleMeasurementWithCoefficientComputation() {
 			livePresignature := fhks_bbs_plus.NewLivePreSignature().FromPreSignature(
 				ownIndex,
 				indices[iK],
-				preComputation[ownIndex-1].PreSignatures[iK],
+				preComputation[ownIndex].PreSignatures[iK],
 			)
 			makeLiveDurations = append(makeLiveDurations, time.Since(start))
 			start = time.Now()

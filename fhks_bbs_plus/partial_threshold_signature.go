@@ -1,6 +1,10 @@
 package fhks_bbs_plus
 
-import bls12381 "github.com/kilic/bls12-381"
+import (
+	"errors"
+
+	bls12381 "github.com/kilic/bls12-381"
+)
 
 type PartialThresholdSignature struct {
 	CapitalAShare *bls12381.PointG1
@@ -28,7 +32,7 @@ func NewPartialThresholdSignatureFromValues(capitalAShare *bls12381.PointG1, del
 }
 
 func (pts *PartialThresholdSignature) New(messages []*bls12381.Fr, pk *PublicKey, preSignature *LivePreSignature) *PartialThresholdSignature {
-	//message-dependent term
+	// message-dependent term
 	g1 := bls12381.NewG1()
 	basis := bls12381.NewG1().One()
 
@@ -50,4 +54,60 @@ func (pts *PartialThresholdSignature) New(messages []*bls12381.Fr, pk *PublicKey
 	pts.EShare.Set(preSignature.EShare)
 	pts.SShare.Set(preSignature.SShare)
 	return pts
+}
+
+func (pts *PartialThresholdSignature) ToBytes() ([]byte, error) {
+	// Serialize CapitalAShare
+	g1 := bls12381.NewG1()
+	cAShareBytes := g1.ToBytes(pts.CapitalAShare)
+
+	// Serialize DeltaShare
+	deltaShareBytes := pts.DeltaShare.ToBytes()
+
+	// Serialize EShare
+	eShareBytes := pts.EShare.ToBytes()
+
+	// Serialize SShare
+	sShareBytes := pts.SShare.ToBytes()
+
+	serialized := append(cAShareBytes, deltaShareBytes...)
+	serialized = append(serialized, eShareBytes...)
+	serialized = append(serialized, sShareBytes...)
+	if len(serialized) < G1Size+FrSize*3 {
+		return nil, errors.New("outputput data is too short to represent the PartialThresholdSignature")
+	}
+	return serialized, nil
+}
+
+func (pts *PartialThresholdSignature) FromBytes(data []byte) error {
+	if len(data) < G1Size+FrSize*3 {
+		return errors.New("input data is too short to represent the PartialThresholdSignature")
+	}
+
+	// Deserialize CapitalAShare
+	cAShareBytes := data[:G1Size]
+	g1 := bls12381.NewG1()
+	cAShare, err := g1.FromBytes(cAShareBytes)
+	if err != nil {
+		return err
+	}
+
+	// Deserialize DeltaShare
+	deltaShareBytes := data[G1Size : G1Size+FrSize]
+	deltaShare := bls12381.NewFr().FromBytes(deltaShareBytes)
+
+	// Deserialize EShare
+	eShareBytes := data[G1Size+FrSize : G1Size+FrSize*2]
+	eShare := bls12381.NewFr().FromBytes(eShareBytes)
+
+	// Deserialize SShare
+	sShareBytes := data[G1Size+FrSize*2 : G1Size+FrSize*3]
+	sShare := bls12381.NewFr().FromBytes(sShareBytes)
+
+	pts.CapitalAShare = cAShare
+	pts.DeltaShare = deltaShare
+	pts.EShare = eShare
+	pts.SShare = sShare
+
+	return nil
 }

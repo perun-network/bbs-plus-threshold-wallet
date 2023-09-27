@@ -1,6 +1,10 @@
 package fhks_bbs_plus
 
-import bls12381 "github.com/kilic/bls12-381"
+import (
+	"errors"
+
+	bls12381 "github.com/kilic/bls12-381"
+)
 
 type ThresholdSignature struct {
 	CapitalA *bls12381.PointG1
@@ -102,4 +106,51 @@ func (ts *ThresholdSignature) Verify(messages []*bls12381.Fr, pk *PublicKey) boo
 	t2 := bls12381.NewEngine().AddPair(verificationBasis, g2.One()).Result()
 
 	return t1.Equal(t2)
+}
+
+func (ts *ThresholdSignature) FromBytes(data []byte) error {
+	if len(data) < G1Size+FrSize+FrSize {
+		return errors.New("input data is too short to represent the ThresholdSignature")
+	}
+
+	// Deserialize CapitalA
+	g1 := bls12381.NewG1()
+	cABytes := data[:G1Size]
+	cA, err := g1.FromBytes(cABytes)
+	if err != nil {
+		return err
+	}
+
+	// Deserialize E
+	eBytes := data[G1Size : G1Size+FrSize]
+	e := bls12381.NewFr().FromBytes(eBytes)
+
+	// Deserialize S
+	sBytes := data[G1Size+FrSize : G1Size+FrSize+FrSize]
+	s := bls12381.NewFr().FromBytes(sBytes)
+
+	ts.CapitalA = cA
+	ts.E = e
+	ts.S = s
+
+	return nil
+}
+
+func (ts *ThresholdSignature) ToBytes() ([]byte, error) {
+	// Serialize CapitalAShare
+	g1 := bls12381.NewG1()
+	cABytes := g1.ToBytes(ts.CapitalA)
+
+	// Serialize E
+	eBytes := ts.E.ToBytes()
+
+	// Serialize S
+	sBytes := ts.S.ToBytes()
+
+	serialized := append(cABytes, eBytes...)
+	serialized = append(serialized, sBytes...)
+	if len(serialized) < G1Size+FrSize*2 {
+		return nil, errors.New("output data is too short to represent the ThresholdSignature")
+	}
+	return serialized, nil
 }
