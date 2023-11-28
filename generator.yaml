@@ -1,0 +1,15 @@
+alias: generator
+
+node:
+  endpoint: localhost:26601
+  walletExpiry: 3600s
+  signingTimeout: 300s
+  dialTimeout: 300s
+
+wallet:
+  ID: "vcwallet:generator"
+  password: "j2113g4kjkeasdf"
+  threshold: 2
+  servers: 3
+  presigs: 5
+  contractsetup: generator

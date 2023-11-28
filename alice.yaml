@@ -1,0 +1,12 @@
+alias: alice
+
+node:
+  endpoint: localhost:26602
+  walletExpiry: 3600s
+  signingTimeout: 300s
+  dialTimeout: 300s
+
+wallet:
+  ID: "vcwallet:alice"
+  Password: "1af2e95"
+  contractsetup: holder
