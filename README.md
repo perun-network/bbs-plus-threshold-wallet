@@ -1,12 +1,12 @@
 # Aries Threshold BBS+ Wallet Demo
 
-This repository aims to demonstarte a credential swap process between a Holder and multiple Signers following the (t-out-of-n) Threshold Secret Sharing. The Aries framework implementation ensures data authentification and exchange between entities within a distributed ledger. Our implementation of the Aries Agent provides the integration of the BBS+ theshold signature with the Aries Verifiable Credential Wallet. This approach boosts security by preventing any single entity from accessing the complete data. It reduces unauthorized access risks, ensures controlled access, protects privacy, and helps with legal compliance. 
+This repository aims to demonstrate a credential swap process between a Holder and multiple Signers following the (t-out-of-n) Threshold Secret Sharing. The Aries framework implementation ensures data authentification and exchange between entities within a distributed ledger. Our implementation of the Aries Agent integrates the BBS+ threshold signature with the [Aries Verifiable Credential Wallet]. This approach boosts security by preventing any single entity from accessing the complete data. It reduces unauthorized access risks, ensures controlled access, protects privacy, and helps with legal compliance. 
 
-In the demonstration, Alice wants her residence permit to be signed from the Faber foreign instituts. Signer0, Signer1 and Signer2 are members of the Faber institut. Each one of them reserves a partial precomputation and can be contacted to sign the residence permit. Alice will have to contact at least two of them to sign her residence permit, in order to combine the signature and produce a BBS+ signature proof for her residence permit (2-out-of-3 Secret Sharing.) The signed credential can be used in conjunction with the generated public key to verify the eligibility of Alice's residence permit.
+In the demonstration, Alice wants the Faber foreign institutions to sign her residence permit. Signer0, Signer1, and Signer2 are members of the Faber Institute. Each reserves a partial precomputation and can be contacted to sign the residence permit. Alice will have to contact at least two of them to sign her residence permit, combine the signature, and produce a BBS+ signature proof for her residence permit (2-out-of-3 Secret Sharing). The signed credential can be used in conjunction with the generated public key to verify the eligibility of Alice's residence permit.
 
 ## Residence Permit Alice-Faber Demo
 
-This Alice and Faber Demo describes a setting where a residence, Alice, connects with the governmet foreign institut, Faber, and asks the institut to issue her a digital verifiable credential for her residence permit. The protocol differs to the traditional Alice-Faber Demo in that, Faber is realised as a group of goverment agents, and Alice has to connect to at least a threshold number t of them, to get t partial signed credential and produce a valid verifiable credential on her own. The protocol in demo involves the following steps:
+This Alice and Faber Demo describes a setting where a residence, Alice, connects with the government foreign institution, Faber, and asks the institute to issue her a digitally verifiable credential for her residence permit. The protocol differs from the traditional Alice-Faber Demo in that Faber is realized as a group of government agents. Alice has to connect to at least a threshold number t to get a partially signed credential and produce a valid, verifiable one on her own. The protocol in the demo involves the following steps:
 
 1. **The BBS+ Precomputation Generator** produced **precomputations** and a **public key**, binded together within a **collectionID** string.
 
@@ -14,21 +14,21 @@ This Alice and Faber Demo describes a setting where a residence, Alice, connects
 
 3. Alice imports the public key to verify the signature later.
 
-4. Each Faber's signer create an invitation for Alice to establish **DIDComm** connection.
+4. Each Faber's signer invites Alice to establish a **DIDComm** connection.
 
 5. Alices connects with the Faber's signers using their invitations.
 
 6. Alice sets the signing threshold for signing. 
 
-7. Alice chooses a threshold number of signers for creating the partial signatures and initiate the Issue Credential Protocol with them by sending a ```credential-proposal``` message.
+7. Alice chooses a threshold number of signers for creating the partial signatures and initiates the Issue Credential Protocol with them by sending a ```credential-proposal``` message.
 
 8. Faber's signers receive the proposal and send back a ```credential-offer``` to confirm.
 
-9. Alice reconfirm with and request a partial signature with a ```credential-request``` message to each of them.
+9. Alice reconfirmed with and requested a partial signature with a ```credential-request``` message to them.
 
-10. Signers accept the request, sign the attached residence permit and send back through ```issue-credential``` messages.
+10. Signers accept the request, sign the attached residence permit, and send it back through ```issue-credential``` messages.
 
-11. Alice collects all the partial signatures from the ```issue-credential``` messages and create a combined BBS+ verifiable credential of her residence permit.
+11. Alice collects all the partial signatures from the ```issue-credential``` messages and creates a combined BBS+ verifiable credential of her residence permit.
 
 12. Alice can use the imported public key to verify the validity of her signed residence permit.
 
@@ -36,27 +36,27 @@ This Alice and Faber Demo describes a setting where a residence, Alice, connects
 
 ### Aries Threshold Wallet
 
-Aries Threshold Wallet is an integration between the concept of Non-Interactive Threshold BBS+ From Pseudorandom Correlations with the Verifiable Credential Wallet from Hyperledger Aries.
+Aries Threshold Wallet integrates the concept of Non-Interactive Threshold BBS+ From Pseudorandom Correlations with the Verifiable Credential Wallet from Hyperledger Aries.
 
-The Non-Interactive Threshold BBS+ From Pseudorandom Correlations Protocol introduces a novel protocol called t-out-of-n threshold BBS+ for issuing anonymous credentials, aiming to reduce risks linked to a single credential issuer. It enables efficient and secure credential creation and demonstration of possession while minimizing communication complexity. Unlike existing schemes, this protocol supports various security thresholds and achieves fast signing speeds with minimal impact on performance.
+The [Non-Interactive Threshold BBS+ From Pseudorandom Correlations Protocol] introduces a novel protocol called t-out-of-n threshold BBS+ for issuing anonymous credentials, aiming to reduce risks linked to a single credential issuer. It enables efficient and secure credential creation and demonstration of possession while minimizing communication complexity. Unlike existing schemes, this protocol supports various security thresholds and achieves fast signing speeds with minimal impact on performance.
 
-The Verifiable Credential Wallet in Aries Framework Go implements the interface Universal Wallet specified by W3C, which can be used to manage JSON-LD credentials and related data models. 
+The Verifiable Credential Wallet in Aries Framework Go implements the interface [Universal Wallet] specified by W3C, which can be used to manage JSON-LD credentials and related data models. 
 
 ### Current state
 
-At this stage, the Demo implemented Alice and Faber's signers as Aries Threshold Wallet objects. They perform peer-to-peer credential exchange using the Aries's issue credential protocol. In the first iteration, we assume that all agents act honestly. 
+At this stage, the Demo implemented Alice and Faber's signers as Aries Threshold Wallet objects. They perform peer-to-peer credential exchange using Aries's issue credential protocol. In the first iteration, we assume that all agents act honestly. 
 
-The Threshold BBS+ implementation being used is realised using a simple mock of Pseudorandom Correlations Generators, which need to be swapped out in future iteration.
+The Threshold BBS+ implementation is realized using a simple mock of the Pseudorandom Correlations Generator, which must be swapped out in future iterations.
 
-The current version of VC Wallet does not fully support the storing of precomputations as signing materials (must provide a public and private key as a signing suite). The precomputation is temporary stored in VCWallet instead as Metadata, which can be retrieved for signing partial signatures. This implementation is still considered acceptable because without most of the precomputations are acquired, the adversary still cannot produce a valid signature.
+The current version of VC Wallet does not fully support storing precomputations as signing materials (must provide a public and private key as a signing suite). The precomputation is temporarily stored in VCWallet instead of Metadata, which can be retrieved for signing partial signatures. This implementation is still considered acceptable because the adversary cannot produce a valid signature without most of the precomputations acquired.
 
 ### Run the Demo
 
-The Demonstration is currently under develop with [Go] 1.20 and a forked [Aries Framework Go] v0.4.6-2.
+The Demonstration is currently under development with [Go] 1.20 and a forked [Aries Framework Go] v0.4.6-2.
 
 #### Getting started
 
-Running the aries-threshold-demo requires working Go distribution, see ```go.mod``` for the required version.
+Running the aries-threshold-demo requires working Go distribution; see ```go.mod``` for the required version.
 
 ```sh
 # Clone the repository into a directory of your choice.
@@ -72,7 +72,7 @@ go build
 
 #### Setup precomputations.
 
-1. Start the Precomputation Generator to generated the public key and precomputations.
+1. Start the Precomputation Generator to generate the public key and precomputations.
 
 ```sh
 ./bbs-plus-threshold-wallet demo --config generator.yaml
@@ -91,7 +91,7 @@ Encrypted public key: > # public key string
 # Example public key string: lI6Kuz10UKkwTUUnv7AzYapMy5Vg+23779nhexXQmOB7cq+bgbTelS3Rp33l3zUBFc/oyH/vW0sBEvESwjRY1iAuquVlS2BumhCsvGpR/H0ClekJuTeLl7R5eTueW7QJ
 ```
 
-3. Start 3 other terminals, each to run the respective Faber's signers. At each terminal, use the command `import-precomp` to import the precomputation for the respective signer.
+3. Start three other terminals to run the respective Faber's signers. Use the command `import-precomp` at each terminal to import the precomputation for the respective signer.
 
 ```sh
 ./bbs-plus-threshold-wallet demo --config faber_signer0.yaml
@@ -112,7 +112,7 @@ Encrypted precomputation: > # precomputation string
 
 #### Threshold Credential Issuance Protocol 
 
-4.  Each signer can generate an invitation for alice.
+4.  Each signer can generate an invitation for Alice.
 ```sh
 > invite alice
 ```
@@ -139,7 +139,7 @@ Invitation:
 Invite details: > # Invitation
 ```
 
-6. Alice set the threshold based on the what the generator specified.
+6. Alice set the threshold based on what the generator specified.
 
 ```sh
 > set-threshold #collectionID #threshold
@@ -153,7 +153,7 @@ Invite details: > # Invitation
 # Example: sign residence_permit.json did:collection:urn:uuid:77b7dd83-0224-4ad0-a043-2148f3190320 0
 ```
 
-8. A threshold number of signers will receive the proposal and need follow the Issue Credential Protocol.
+8. A threshold number of signers will receive the proposal and need to follow the Issue Credential Protocol.
 
 ```sh
 🔁 Incoming credential proposal. Accept(y/n)? 
@@ -167,7 +167,7 @@ Sent back offer to holder.
 Sent back partial signed credential to holder.
 ```
 
-9. After received all the partial signed credential, Alice combine a valid BBS+ signature and signed the residence permit. Alice stores the signed credential in her digital wallet.
+9. After receiving all the partially signed credential, Alice combined a valid BBS+ signature and signed the residence permit. Alice stores the signed credential in her digital wallet.
 
 ```sh
 🔁 Incoming partial signed credential. Accept and combine with other partial signatures. 
@@ -192,13 +192,16 @@ Retrieve public key
 ✅ Credential verified.      
 ```
 
-11. Exit the CLI with command.
+11. Exit the CLI with the command.
 
 ```sh
 > exit
 ```
 
-You can always check the current status with command ```info``` and check possible commands with command ```help```.
+You can always check the current status with the command ```info``` and check possible commands with the command ```help```.
 
 [Go]: https://go.dev#
 [Aries Framework Go]:https://github.com/perun-network/aries-framework-go
+[Aries Verifiable Credential Wallet]:https://github.com/hyperledger/aries-framework-go/blob/main/docs/vc_wallet.md 
+[Non-Interactive Threshold BBS+ From Pseudorandom Correlations Protocol]:https://eprint.iacr.org/2023/1076.pdf
+[Universal Wallet]:https://w3c-ccg.github.io/universal-wallet-interop-spec/#Credential
