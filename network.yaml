@@ -1,0 +1,12 @@
+peers:
+  alice:
+    endpoint: localhost:26602
+
+  faber_signer1:
+    endpoint: localhost:26603
+
+  faber_signer2:
+    endpoint: localhost:26604
+
+  faber_signer0:
+    endpoint: localhost:26605
