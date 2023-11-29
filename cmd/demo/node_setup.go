@@ -143,7 +143,10 @@ func (n *node) setup() error {
 		if err != nil {
 			return errors.WithMessage(err, "start DIDComm handler")
 		}
-		n.PrintConfig()
+		err = n.PrintConfig()
+		if err != nil {
+			return errors.WithMessage(err, "print config")
+		}
 		fmt.Println()
 		logrus.Println("✅ Holder ready.")
 		return nil
@@ -254,7 +257,10 @@ func (n *node) setup() error {
 			return errors.WithMessage(err, "start DIDComm handler")
 		}
 
-		n.PrintConfig()
+		err = n.PrintConfig()
+		if err != nil {
+			return errors.WithMessage(err, "print config")
+		}
 		fmt.Println()
 
 		logrus.Println("✅ Signer ready.")

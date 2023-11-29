@@ -1,7 +1,7 @@
 alias: faber_signer1
 
 node:
-  endpoint: localhost:26603
+  endpoint: localhost:26604
   walletExpiry: 3600s
   signingTimeout: 300s
   dialTimeout: 300s

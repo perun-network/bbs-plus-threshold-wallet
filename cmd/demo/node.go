@@ -365,12 +365,15 @@ func (n *node) SignThresholdCredential(args []string) error {
 		logrus.Println("Holder sends proposal to participating signers...")
 		signedCredDoc, err := n.client.Sign(credDoc)
 		if err != nil {
-			return errors.WithMessage(err, "signing threshold credential")
+			return errors.WithMessage(err, "sign threshold credential")
 		}
 
-		logrus.Println("Holder gets the signed credential:")
+		logrus.Println("Holder forges the signed credential from the partial signatures:")
 		fmt.Println(util.Format(util.YELLOW, string(signedCredDoc.Content)))
-		n.client.Store(signedCredDoc)
+		err = n.client.Store(signedCredDoc)
+		if err != nil {
+			return errors.WithMessage(err, "store threshold credential")
+		}
 		fmt.Println()
 		fmt.Println("Signed Credential " + util.Format(util.PURPLE, signedCredDoc.ID) + " stored in the wallet.")
 		fmt.Println()

@@ -11,8 +11,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
-
 // rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
 	Use:              "aries-threshold-demo",
@@ -42,9 +40,15 @@ func Execute() {
 
 func init() {
 	rootCmd.PersistentFlags().StringVar(&logConfig.Level, "log-level", "warn", "Logrus level")
-	viper.BindPFlag("log.level", rootCmd.PersistentFlags().Lookup("log-level"))
+	err := viper.BindPFlag("log.level", rootCmd.PersistentFlags().Lookup("log-level"))
+	if err != nil {
+		panic(err)
+	}
 	rootCmd.PersistentFlags().StringVar(&logConfig.File, "log-file", "", "log file")
-	viper.BindPFlag("log.file", rootCmd.PersistentFlags().Lookup("log-file"))
+	err = viper.BindPFlag("log.file", rootCmd.PersistentFlags().Lookup("log-file"))
+	if err != nil {
+		panic(err)
+	}
 
 	rootCmd.AddCommand(demo.GetDemoCmd())
 }

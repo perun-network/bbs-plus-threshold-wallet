@@ -9,13 +9,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-func valString(input string) error {
-	if len(input) < 1 {
-		return errors.New("Empty string")
-	}
-	return nil
-}
-
 func valCollection(input string) error {
 	if !strings.HasPrefix(input, "did:collection:") {
 		return errors.New("invalid input string")
