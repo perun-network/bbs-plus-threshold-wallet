@@ -1,0 +1,12 @@
+alias: faber_signer0
+
+node:
+  endpoint: localhost:26603
+  walletExpiry: 3600s
+  signingTimeout: 300s
+  dialTimeout: 300s
+
+wallet:
+  ID: "vcwallet:faber_signer0"
+  Password: "9a8sdf9h8h83j"
+  contractsetup: signer

@@ -1,7 +1,9 @@
 package main
 
-import "github.com/perun-network/bbs-plus-threshold-wallet/measurements"
+import "github.com/perun-network/bbs-plus-threshold-wallet/cmd"
+
+const ()
 
 func main() {
-	measurements.SimpleMeasurementWithCoefficientComputation()
+	cmd.Execute()
 }
