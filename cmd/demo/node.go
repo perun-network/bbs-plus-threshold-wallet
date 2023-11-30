@@ -388,14 +388,14 @@ func (n *node) Verify(args []string) error {
 		n.mtx.Lock()
 		defer n.mtx.Unlock()
 		fmt.Println()
-		logrus.Println("Retrieve signed document")
+		logrus.Println("Retrieving signed document...")
 		fmt.Println()
 		signedCredDoc, err := n.client.Get(thresholdwallet.Credential, args[1], args[0])
 		if err != nil {
 			return errors.WithMessage(err, "get credential")
 		}
 
-		logrus.Println("Retrieve public key")
+		logrus.Println("Retrieving public key...")
 		fmt.Println()
 		publicKeyDoc, err := n.client.Get(thresholdwallet.PublicKey, args[2], args[0])
 		if err != nil {

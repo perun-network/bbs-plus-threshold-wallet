@@ -185,9 +185,9 @@ Signed Credential did:credential:urn:uuid:b8d89593-c7de-4aa6-a126-89879367c76e s
 # Example verification.
 verify did:collection:urn:uuid:77b7dd83-0224-4ad0-a043-2148f3190320 did:credential:urn:uuid:b8d89593-c7de-4aa6-a126-89879367c76e did:public_key:urn:uuid:46f71e02-ce44-495a-baca-e0ff76a835da 
 
-Retrieve signed document                     
+Retrieving signed document...                     
 
-Retrieve public key                          
+Retrieving public key...                          
 
 ✅ Credential verified.      
 ```
