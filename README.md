@@ -1,4 +1,4 @@
-# BBS-PLUS-THRESHOLD-SIGNATURES
+# Go BBS+ Threshold Signature
 
 ## Description
 This repo serves as the Go implementation for the BBS+ Threshold Signature Algorithm, as discussed in the paper [Non-Interactive Threshold BBS+ From Pseudorandom Correlations](https://eprint.iacr.org/2023/1076.pdf) (Faust, Sebastian, et al., 2023).
