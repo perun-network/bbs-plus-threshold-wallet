@@ -1,9 +1,9 @@
-# Go BBS+ Threshold Signature
+# Threshold BBS+ from Pseudorandom Correlations Implementation
 
 ## Description
-This repo serves as the Go implementation for the BBS+ Threshold Signature Algorithm, as discussed in the paper [Non-Interactive Threshold BBS+ From Pseudorandom Correlations](https://eprint.iacr.org/2023/1076.pdf) (Faust, Sebastian, et al., 2023).
+This repo serves as the Go implementation for the BBS+ Threshold Signature Algorithm, as proposed in the paper [Non-Interactive Threshold BBS+ From Pseudorandom Correlations](https://eprint.iacr.org/2023/1076.pdf) (Faust et al., 2023).
 
-The Rust implementation is also available and is the predecessor to this implementation. [LINK](https://hessenbox.tu-darmstadt.de/dl/fiEEnH9zJezsDorYTsBke7XT/.dir)
+The Rust implementation is the predecessor to this implementation; it is published [here](https://github.com/AppliedCryptoGroup/NI-Threshold-BBS-Plus-Code).
 
 ## Structure
 **fhks_bbs_plus** defines the cryptographic material for the BBS+ Threshold Signature. 
