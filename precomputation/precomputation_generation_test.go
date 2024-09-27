@@ -1,4 +1,4 @@
-package test
+package precomputation_test
 
 import (
 	"testing"
@@ -8,20 +8,11 @@ import (
 	fhksbbsplus "github.com/perun-network/bbs-plus-threshold-wallet/fhks_bbs_plus"
 	"github.com/perun-network/bbs-plus-threshold-wallet/helper"
 	"github.com/perun-network/bbs-plus-threshold-wallet/precomputation"
-)
-
-var (
-	seedPre = [16]uint8{
-		0x59, 0x62, 0xbe, 0x5d, 0x76, 0x3d, 0x31, 0x8d, 0x17, 0xdb, 0x37, 0x32, 0x54, 0x06, 0xbc,
-		0xe5}
-	threshold = 3 // Security threshold (t-out-of-n)
-	n         = 6 // Number of servers
-	k         = 3 // Presignature to create
-	indices   = [][]int{{1, 3, 5}, {1, 5, 2}, {2, 4, 5}}
+	"github.com/perun-network/bbs-plus-threshold-wallet/test"
 )
 
 func TestAllPrecomputationGeneration(t *testing.T) {
-	output := precomputation.GeneratePCFPCGOutput(seedPre, threshold, k, n)
+	output := precomputation.GeneratePCFPCGOutputMocked(test.SeedPre, test.Threshold, test.K, test.N)
 
 	sk := output.Sk
 	skShares := output.SkShares
@@ -33,15 +24,15 @@ func TestAllPrecomputationGeneration(t *testing.T) {
 	askTerms := output.AskTerms
 
 	perPartyPrecomputation := precomputation.CreatePPPrecomputationFromVOLEEvaluation(
-		k, n, skShares, aShares, eShares, sShares, aeTerms, asTerms, askTerms)
+		test.K, test.N, skShares, aShares, eShares, sShares, aeTerms, asTerms, askTerms)
 
-	testPCFPCGOutputAeAsAsk(t, k, indices, sk, aShares, eShares, sShares, aeTerms, asTerms, askTerms)
+	testPCFPCGOutputAeAsAsk(t, test.K, test.Indices, sk, aShares, eShares, sShares, aeTerms, asTerms, askTerms)
 
-	for iK := 0; iK < k; iK++ {
-		testInterpolationForSk(t, sk, skShares, indices[iK])
+	for iK := 0; iK < test.K; iK++ {
+		testInterpolationForSk(t, sk, skShares, test.Indices[iK])
 	}
 
-	testPerPartyPrecomputationsWithoutCoefficients(t, k, indices, perPartyPrecomputation,
+	testPerPartyPrecomputationsWithoutCoefficients(t, test.K, test.Indices, perPartyPrecomputation,
 		sk, aShares, eShares, sShares)
 }
 

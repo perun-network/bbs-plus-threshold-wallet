@@ -2,12 +2,24 @@ package precomputation
 
 import (
 	"encoding/binary"
-	"math/rand"
-
 	bls12381 "github.com/kilic/bls12-381"
-
 	fhksbbsplus "github.com/perun-network/bbs-plus-threshold-wallet/fhks_bbs_plus"
 	"github.com/perun-network/bbs-plus-threshold-wallet/helper"
+	"github.com/perun-network/bbs-plus-threshold-wallet/precomputation/pcg"
+	"math/rand"
+)
+
+var (
+	seedPresignatures = [16]uint8{
+		0x59, 0x62, 0xbe, 0x5d, 0x76, 0x3d, 0x31, 0x8d, 0x17, 0xdb, 0x37, 0x32, 0x54, 0x06, 0xbc,
+		0xe5}
+	seedMessages = [16]uint8{
+		0x59, 0x62, 0xbe, 0x5d, 0x76, 0xaa, 0x31, 0x8d, 0x17, 0x14, 0x37, 0x32, 0x37, 0x06, 0xac,
+		0xe5}
+	seedKeys = [16]uint8{
+		0x59, 0x62, 0xaa, 0x5d, 0x76, 0xaa, 0xbb, 0x8d, 0x17, 0x14, 0x37, 0x32, 0x37, 0xcc, 0xac,
+		0xe5}
+	messageCount = 5
 )
 
 type PCFPCGOutput struct {
@@ -21,8 +33,18 @@ type PCFPCGOutput struct {
 	AskTerms [][][]*helper.OLECorrelation
 }
 
-func GeneratePPPrecomputation(seedArray [16]uint8, t, k, n int) (*bls12381.Fr, []*fhksbbsplus.PerPartyPrecomputations) {
-	output := GeneratePCFPCGOutput(seedArray, t, k, n)
+type TupleOutput struct {
+	Sk       *bls12381.Fr
+	SkShares []*bls12381.Fr
+	AShares  [][]*bls12381.Fr
+	EShares  [][]*bls12381.Fr
+	SShares  [][]*bls12381.Fr
+	Alpha    []*bls12381.Fr
+	Delta    []*bls12381.Fr
+}
+
+func GeneratePPPrecomputationMock(seedArray [16]uint8, t, k, n int) (*bls12381.Fr, []*fhksbbsplus.PerPartyPrecomputations) {
+	output := GeneratePCFPCGOutputMocked(seedArray, t, k, n)
 	return output.Sk, CreatePPPrecomputationFromVOLEEvaluation(k, n,
 		output.SkShares,
 		output.AShares,
@@ -35,7 +57,17 @@ func GeneratePPPrecomputation(seedArray [16]uint8, t, k, n int) (*bls12381.Fr, [
 
 }
 
-func GeneratePCFPCGOutput(seedArray [16]uint8, t int, k int, n int) PCFPCGOutput {
+func GeneratePPPrecomputation(seedArray [16]uint8, tau, k, n int) (*bls12381.Fr, []*fhksbbsplus.PerPartyPrecomputationsSimple) {
+	output := GeneratePCFPCGOutput(seedArray, tau, k, n)
+	return output.Sk, CreatePPPrecomputation(k, n,
+		output.SkShares,
+		output.AShares,
+		output.EShares,
+		output.SShares,
+	)
+}
+
+func GeneratePCFPCGOutputMocked(seedArray [16]uint8, t int, k int, n int) PCFPCGOutput {
 	seed := int64(binary.BigEndian.Uint64(seedArray[:]))
 	rng := rand.New(rand.NewSource(seed))
 	sk, skShares := helper.GetShamirSharedRandomElement(rng, t, n)
@@ -47,6 +79,110 @@ func GeneratePCFPCGOutput(seedArray [16]uint8, t int, k int, n int) PCFPCGOutput
 	askTerms := helper.MakeAllPartiesVOLE(rng, k, n, aShares, skShares)
 
 	return PCFPCGOutput{sk, skShares, aShares, eShares, sShares, aeTerms, asTerms, askTerms}
+}
+
+func GeneratePCFPCGOutput(seedArray [16]uint8, tau int, k int, n int) TupleOutput {
+	c, t := 2, 4
+	N := 10
+
+	pcgenerator, err := pcg.NewPCG(128, N, n, tau, c, t)
+	if err != nil {
+		panic(err)
+	}
+
+	ring, err := pcgenerator.GetRing(false)
+	if err != nil {
+		panic(err)
+	}
+	sk, seeds, err := pcgenerator.SeedGenWithSk()
+	if err != nil {
+		panic(err)
+	}
+	randPolys, err := pcgenerator.PickRandomPolynomials()
+	if err != nil {
+		panic(err)
+	}
+	signerSet := make([]int, tau)
+	for i := 1; i == tau; i++ {
+		signerSet[i] = i
+	}
+
+	tupleArray := make([][]*pcg.BBSPlusTuple, len(signerSet))
+
+	alphaShares := make([]*bls12381.Fr, n)
+	deltaShares := make([]*bls12381.Fr, n)
+	skShares := make([]*bls12381.Fr, n)
+
+	root := ring.Roots[10]
+
+	for k, signer := range signerSet {
+
+		sharesGen, err := pcgenerator.EvalSeparate(seeds[signer], randPolys, ring.Div)
+		if err != nil {
+			panic(err)
+		}
+
+		tupleArray[k] = make([]*pcg.BBSPlusTuple, n)
+
+		for i := 0; i < n; i++ {
+			tuple := sharesGen.GenBBSPlusTuple(root, signerSet)
+			tupleArray[k][i] = tuple
+			alphaShares[i] = tuple.AlphaShare
+			deltaShares[i] = tuple.DeltaShare
+			skShares[i] = tuple.SkShare
+		}
+	}
+
+	aShares := make([][]*bls12381.Fr, len(signerSet))
+	eShares := make([][]*bls12381.Fr, len(signerSet))
+	sShares := make([][]*bls12381.Fr, len(signerSet))
+
+	for tIndex := range signerSet {
+		aShares[tIndex] = make([]*bls12381.Fr, n)
+		eShares[tIndex] = make([]*bls12381.Fr, n)
+		sShares[tIndex] = make([]*bls12381.Fr, n)
+
+		for i := 0; i < n; i++ {
+			aShares[tIndex][i] = tupleArray[tIndex][i].AShare
+			eShares[tIndex][i] = tupleArray[tIndex][i].EShare
+			sShares[tIndex][i] = tupleArray[tIndex][i].SShare
+
+		}
+	}
+
+	return TupleOutput{sk, skShares, aShares, eShares, sShares, alphaShares, deltaShares}
+}
+
+func CreatePPPrecomputation(
+	k int,
+	n int,
+	skShares []*bls12381.Fr,
+	aShares, eShares, sShares [][]*bls12381.Fr,
+) []*fhksbbsplus.PerPartyPrecomputationsSimple {
+	precomputations := make([]*fhksbbsplus.PerPartyPrecomputationsSimple, n)
+	for iN := 0; iN < n; iN++ {
+		preSignatureList := make([]*fhksbbsplus.PerPartyPreSignatureSimple, k)
+
+		for iK := 0; iK < k; iK++ {
+
+			for jN := 0; jN < n; jN++ {
+
+				preSignatureList[iK] = &fhksbbsplus.PerPartyPreSignatureSimple{
+					AShare: aShares[iK][iN],
+					EShare: eShares[iK][iN],
+					SShare: sShares[iK][iN],
+				}
+			}
+		}
+
+		precomputations[iN] = &fhksbbsplus.PerPartyPrecomputationsSimple{
+			Index:         iN,
+			SkShare:       skShares[iN],
+			PreSignatures: preSignatureList,
+		}
+	}
+
+	return precomputations
 }
 
 func CreatePPPrecomputationFromVOLEEvaluation(

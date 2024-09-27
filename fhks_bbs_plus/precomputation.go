@@ -21,12 +21,23 @@ type PerPartyPreSignature struct {
 	AskTermsSK []*bls12381.Fr // Share of a^k_j * sk_i for k in [t], j in [n] (j can also be i -- this time other share).
 }
 
+type PerPartyPreSignatureSimple struct {
+	AShare *bls12381.Fr
+	EShare *bls12381.Fr
+	SShare *bls12381.Fr
+}
+
 type PerPartyPrecomputations struct {
 	Index         int // Position at which sk-polynomial for own secret key share is evaluated.
 	SkShare       *bls12381.Fr
 	PreSignatures []*PerPartyPreSignature
 }
 
+type PerPartyPrecomputationsSimple struct {
+	Index         int // Position at which sk-polynomial for own secret key share is evaluated.
+	SkShare       *bls12381.Fr
+	PreSignatures []*PerPartyPreSignatureSimple
+}
 type LivePreSignature struct {
 	AShare     *bls12381.Fr
 	EShare     *bls12381.Fr
@@ -49,6 +60,14 @@ func (lps *LivePreSignature) FromPreSignature(ownIndex int, indices []int, preSi
 	lagrangeCoefficients := helper.Get0LagrangeCoefficientSetFr(indices)
 	return lps.FromPresignatureWithCoefficients(ownIndex, indices, preSignature, lagrangeCoefficients)
 
+}
+
+func (lps *LivePreSignature) FromPreSignatureShares(preSignature *PerPartyPreSignatureSimple) *LivePreSignature {
+	livePreSignature := NewLivePreSignature()
+	livePreSignature.AShare.Set(preSignature.AShare)
+	livePreSignature.EShare.Set(preSignature.EShare)
+	livePreSignature.SShare.Set(preSignature.SShare)
+	return livePreSignature
 }
 
 func (lps *LivePreSignature) FromPresignatureWithCoefficients(
