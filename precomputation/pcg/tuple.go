@@ -140,8 +140,7 @@ func (t *SeparateBBSPlusTupleGenerator) GenBBSPlusTuple(root *bls12381.Fr, signe
 			// fmt.Println("t.delta0Poly[signer] ", t.delta0Poly[signer])
 			deltaShareFwd.Mul(t.delta0Poly[signer][forwardDirection].Evaluate(root), lagrangeCoeff[indJ])
 			// cji * Li, i = t.ownIndex
-
-			delta0ShareOwn.Add(delta0ShareOwn, t.delta0Poly[signer-1][backwardDirection].Evaluate(root))
+			delta0ShareOwn.Add(delta0ShareOwn, t.delta0Poly[signer][backwardDirection].Evaluate(root))
 
 		} else {
 			indI = indJ
