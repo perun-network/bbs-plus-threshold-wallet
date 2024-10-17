@@ -1,6 +1,6 @@
 module github.com/perun-network/bbs-plus-threshold-wallet
 
-go 1.22
+go 1.22.0
 
 require (
 	github.com/kilic/bls12-381 v0.1.0
