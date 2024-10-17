@@ -52,24 +52,34 @@ func TestSimpleSigningMockedPre(t *testing.T) {
 	}
 }
 
-func TestSimpleSigning(t *testing.T) {
+func TestSimpleSigningTauOutOfN(t *testing.T) {
 
 	messages := helper.GetRandomMessagesFromSeed(seedMessages, test.K, messageCount)
 
-	sk, preComputation := precomputation.GeneratePPPrecomputation(seedPresignatures, test.Threshold, test.K, test.N)
+	sk, preComputation := precomputation.GeneratePPPrecomputationTauOutOfN(seedPresignatures, test.Threshold, test.K, test.N)
 
 	pk := fhks_bbs_plus.GeneratePublicKey(seedKeys, sk, messageCount)
 
+	// for K no of messages to sign for signers test.Threshold
 	for iK := 0; iK < test.K; iK++ {
 		partialSignatures := make([]*fhks_bbs_plus.PartialThresholdSignature, test.Threshold)
 		for iT := 0; iT < test.Threshold; iT++ {
-			ownIndex := test.IndicesSimple[iK][iT]
+			freshPreSig := fhks_bbs_plus.NewLivePreSignature()
+			Akt := preComputation[iK][iT].AShare
+			Ekt := preComputation[iK][iT].EShare
+			Skt := preComputation[iK][iT].SShare
+			pppSigSimple := fhks_bbs_plus.PerPartyPreSignatureSimple{
+				AShare: Akt,
+				EShare: Ekt,
+				SShare: Skt,
+			}
+			filledPreSig := freshPreSig.FromPreSignatureShares(&pppSigSimple)
 
 			x := fhks_bbs_plus.NewPartialThresholdSignature().New(
 				messages[iK],
 				pk,
-				fhks_bbs_plus.NewLivePreSignature().FromPreSignatureShares(
-					preComputation[ownIndex-1].PreSignatures[iK]))
+				filledPreSig,
+			)
 
 			partialSignatures[iT] = x
 		}

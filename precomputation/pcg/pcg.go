@@ -148,7 +148,7 @@ func (p *PCG) GetRing(fast bool) (*Ring, error) {
 func (p *PCG) TrustedSeedGen() ([]*Seed, error) {
 	// Notation of the variables analogue to the notation from the formal definition of PCG
 	// 1. Generate key shares for each party
-	_, skShares := getShamirSharedRandomElement(p.rng, 2, 2) // for testing, we always use 2 out of 2, as we do not interpolate the key shares
+	_, skShares := getShamirSharedRandomElement(p.rng, 3, 6)
 
 	// 2a. Initialize aOmega, eEta, and sPhi by sampling at random from N
 	aOmega := p.sampleExponents() // a
