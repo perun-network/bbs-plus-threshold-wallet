@@ -97,6 +97,66 @@ func NewSeparateBBSPlusTupleGenerator(usk, uk, uv *poly.Polynomial, SkShare *bls
 
 // GenBBSPlusTuple returns a BBSPlusTuple from a SeparateBBSPlusTupleGenerator for a given root.
 // signerSet is the set of signers that are participating. It must contain ownIndex.
+func (t *SeparateBBSPlusTupleGenerator) GenBBSPlusTupleNoLagrange(root *bls12381.Fr, signerSet []int) *BBSPlusTuple {
+	// Check if ownIndex is in signerSet
+	ownIndexInSignerSet := false
+	for _, signer := range signerSet {
+		if signer == t.ownIndex {
+			ownIndexInSignerSet = true
+			break
+		}
+	}
+	if !ownIndexInSignerSet {
+		return nil
+	}
+
+	// Calculate a_i
+	aiElement := t.aPoly.Evaluate(root)
+
+	// Calculate e_i
+	eiElement := t.ePoly.Evaluate(root)
+
+	// Calculate s_i
+	siElement := t.sPoly.Evaluate(root)
+
+	// Calculate delta_0i based on the signer set
+
+	delta0i := poly.NewEmpty()
+	for _, signer := range signerSet {
+		if signer != t.ownIndex {
+			delta0i.Add(t.delta0Poly[signer][forwardDirection])
+			delta0i.Add(t.delta0Poly[signer][backwardDirection])
+		}
+	}
+	delta0i.Add(t.usk)
+
+	// Calculate alpha_i based on the signer set
+	alphai := poly.NewEmpty()
+	for _, signer := range signerSet {
+		if signer != t.ownIndex {
+			alphai.Add(t.alphaPoly[signer])
+		}
+	}
+	alphai.Add(t.uk)
+	alphaiElement := alphai.Evaluate(root)
+
+	// Calculate delta_1i based on the signer set
+	delta1i := poly.NewEmpty()
+	for _, signer := range signerSet {
+		if signer != t.ownIndex {
+			delta1i.Add(t.delta1Poly[signer])
+		}
+	}
+	delta1i.Add(t.uv)
+
+	deltaiPoly := poly.Add(delta0i, delta1i)
+	deltaiElement := deltaiPoly.Evaluate(root)
+
+	return NewBBSPlusTuple(t.skShare, aiElement, eiElement, siElement, alphaiElement, deltaiElement)
+}
+
+// GenBBSPlusTuple returns a BBSPlusTuple from a SeparateBBSPlusTupleGenerator for a given root.
+// signerSet is the set of signers that are participating. It must contain ownIndex.
 func (t *SeparateBBSPlusTupleGenerator) GenBBSPlusTuple(root *bls12381.Fr, signerSet []int) *BBSPlusTuple {
 	// Check if ownIndex is in signerSet
 	ownIndexInSignerSet := false
@@ -123,12 +183,9 @@ func (t *SeparateBBSPlusTupleGenerator) GenBBSPlusTuple(root *bls12381.Fr, signe
 
 	lagrangeCoeff := helper.Get0LagrangeCoefficientSetFr(signerSet)
 
-	deltaiPolyLagr := poly.NewEmpty()
-
 	var deltaShareFwd, deltaShareAll *bls12381.Fr
 
 	deltaShareAll = bls12381.NewFr().Zero()
-
 	delta0ShareOwn := bls12381.NewFr().Zero()
 
 	indI := 0
@@ -137,7 +194,6 @@ func (t *SeparateBBSPlusTupleGenerator) GenBBSPlusTuple(root *bls12381.Fr, signe
 		if signer != t.ownIndex {
 			// cij * Lj, i = t.ownIndex
 			deltaShareFwd = bls12381.NewFr().One()
-			// fmt.Println("t.delta0Poly[signer] ", t.delta0Poly[signer])
 			deltaShareFwd.Mul(t.delta0Poly[signer][forwardDirection].Evaluate(root), lagrangeCoeff[indJ])
 			// cji * Li, i = t.ownIndex
 			delta0ShareOwn.Add(delta0ShareOwn, t.delta0Poly[signer][backwardDirection].Evaluate(root))
@@ -150,8 +206,8 @@ func (t *SeparateBBSPlusTupleGenerator) GenBBSPlusTuple(root *bls12381.Fr, signe
 
 	// continue with ownIndex calculation,
 	// second term with Li coefficient
-	delta0ShareOwn.Mul(lagrangeCoeff[indI], delta0ShareOwn)
 
+	delta0ShareOwn.Mul(lagrangeCoeff[indI], delta0ShareOwn)
 	deltaShareAll.Add(delta0ShareOwn, deltaShareFwd)
 
 	// delta0 calculation finished
@@ -161,7 +217,6 @@ func (t *SeparateBBSPlusTupleGenerator) GenBBSPlusTuple(root *bls12381.Fr, signe
 	for _, signer := range signerSet {
 		if signer != t.ownIndex {
 			delta0i.Add(t.delta0Poly[signer][forwardDirection])
-
 			delta0i.Add(t.delta0Poly[signer][backwardDirection])
 		}
 	}
@@ -186,18 +241,12 @@ func (t *SeparateBBSPlusTupleGenerator) GenBBSPlusTuple(root *bls12381.Fr, signe
 	}
 	delta1i.Add(t.uv)
 
-	deltaiPoly := poly.Add(delta0i, delta1i)
-
+	deltaiPolyLagr := poly.NewEmpty()
 	deltaiPolyLagr.Add(delta1i)
 	deltaiLagrElement := deltaiPolyLagr.Evaluate(root)
 
-	deltaLagrElement := bls12381.NewFr().Zero()
+	deltaiLagrElement.Add(deltaiLagrElement, deltaShareAll)
 
-	deltaiLagrElement.Add(deltaLagrElement, deltaShareAll)
-
-	deltaiLagrElement.Add(deltaiLagrElement, deltaiLagrElement)
-
-	_ = deltaiPoly.Evaluate(root)
 	return NewBBSPlusTuple(t.skShare, aiElement, eiElement, siElement, alphaiElement, deltaiLagrElement)
 }
 

@@ -38,6 +38,15 @@ type PerPartyPrecomputationsSimple struct {
 	SkShare       *bls12381.Fr
 	PreSignatures []*PerPartyPreSignatureSimple
 }
+type LivePreSignatureSk struct {
+	SkShare    *bls12381.Fr
+	AShare     *bls12381.Fr
+	EShare     *bls12381.Fr
+	SShare     *bls12381.Fr
+	DeltaShare *bls12381.Fr
+	AlphaShare *bls12381.Fr
+}
+
 type LivePreSignature struct {
 	AShare     *bls12381.Fr
 	EShare     *bls12381.Fr

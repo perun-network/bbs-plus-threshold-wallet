@@ -58,34 +58,56 @@ func GeneratePPPrecomputationMock(seedArray [16]uint8, t, k, n int) (*bls12381.F
 
 }
 
-func GeneratePPPrecomputationTauOutOfN(seedArray [16]uint8, tau, K, N int) (*bls12381.Fr, [][]*fhksbbsplus.LivePreSignature) {
-	// those which sign the messages, always the same set for simplicity
-	signerSet := test.IndicesSimple[0]
-
-	Tuples := make([][]*pcg.BBSPlusTuple, K)
+func GeneratePPPrecomputationTauOutOfN(seedArray [16]uint8, tau, K, N int) (*bls12381.Fr, []*pcg.Seed, [][]*fhksbbsplus.LivePreSignatureSk) {
+	signerSet := test.IndicesSignersTestTauOutOfN
 
 	var sk *bls12381.Fr
+	livePreSignatures := make([][]*fhksbbsplus.LivePreSignatureSk, K)
 
-	livePreSignaturesPerMsg := make([][]*fhksbbsplus.LivePreSignature, K)
+	sk, skSeeds, output := GeneratePCFPCGOutputTauOutOfN(seedArray, tau, K, N, signerSet)
 
-	for ik := 0; ik < K; ik++ {
-		_, output := GeneratePCFPCGOutputTauOutOfN(seedArray, tau, K, N, signerSet)
-
-		Tuples[ik] = output
-
-		for i := 0; i < len(signerSet); i++ {
-			livePreSignaturesPerMsg[ik][i] = &fhksbbsplus.LivePreSignature{
-				AShare:     output[i].AShare,
-				EShare:     output[i].EShare,
-				SShare:     output[i].SShare,
-				DeltaShare: output[i].DeltaShare,
-				AlphaShare: output[i].AlphaShare,
+	for j := 0; j < K; j++ {
+		livePreSignaturesPerMsg := make([]*fhksbbsplus.LivePreSignatureSk, tau)
+		for i := 0; i < tau; i++ {
+			livePreSignaturesPerMsg[i] = &fhksbbsplus.LivePreSignatureSk{
+				SkShare:    output[j][i].SkShare,
+				AShare:     output[j][i].AShare,
+				EShare:     output[j][i].EShare,
+				SShare:     output[j][i].SShare,
+				DeltaShare: output[j][i].DeltaShare,
+				AlphaShare: output[j][i].AlphaShare,
 			}
 		}
-
+		livePreSignatures[j] = livePreSignaturesPerMsg
 	}
 
-	return sk, livePreSignaturesPerMsg
+	return sk, skSeeds, livePreSignatures
+}
+
+func GeneratePPPrecomputationNOutOfN(seedArray [16]uint8, tau, K, N int) (*bls12381.Fr, []*pcg.Seed, [][]*fhksbbsplus.LivePreSignatureSk) {
+
+	var sk *bls12381.Fr
+	livePreSignatures := make([][]*fhksbbsplus.LivePreSignatureSk, K)
+
+	secretKey, skSeeds, output := GeneratePCFPCGOutputNOutOfN(seedArray, tau, K, N)
+	sk = secretKey
+
+	for j := 0; j < K; j++ {
+		livePreSignaturesPerMsg := make([]*fhksbbsplus.LivePreSignatureSk, tau)
+		for i := 0; i < tau; i++ {
+			livePreSignaturesPerMsg[i] = &fhksbbsplus.LivePreSignatureSk{
+				SkShare:    output[j][i].SkShare,
+				AShare:     output[j][i].AShare,
+				EShare:     output[j][i].EShare,
+				SShare:     output[j][i].SShare,
+				DeltaShare: output[j][i].DeltaShare,
+				AlphaShare: output[j][i].AlphaShare,
+			}
+		}
+		livePreSignatures[j] = livePreSignaturesPerMsg
+	}
+
+	return sk, skSeeds, livePreSignatures
 }
 
 func GeneratePCFPCGOutputMocked(seedArray [16]uint8, t int, k int, n int) PCFPCGOutput {
@@ -102,7 +124,7 @@ func GeneratePCFPCGOutputMocked(seedArray [16]uint8, t int, k int, n int) PCFPCG
 	return PCFPCGOutput{sk, skShares, aShares, eShares, sShares, aeTerms, asTerms, askTerms}
 }
 
-func GeneratePCFPCGOutputTauOutOfN(seedArray [16]uint8, tau int, K int, N int, signerSet []int) (*bls12381.Fr, []*pcg.BBSPlusTuple) {
+func GeneratePCFPCGOutputTauOutOfN(seedArray [16]uint8, tau int, k int, N int, signerSet []int) (*bls12381.Fr, []*pcg.Seed, [][]*pcg.BBSPlusTuple) {
 	c, t := 2, 4
 
 	pcgenerator, err := pcg.NewPCG(128, 10, N, tau, c, t)
@@ -123,27 +145,34 @@ func GeneratePCFPCGOutputTauOutOfN(seedArray [16]uint8, tau int, K int, N int, s
 		panic(err)
 	}
 
-	tupleArray := make([]*pcg.BBSPlusTuple, len(signerSet))
-
 	root := ring.Roots[10]
 
-	for ki, signer := range signerSet {
+	tupleArray := make([][]*pcg.BBSPlusTuple, k)
 
-		sharesGen, err := pcgenerator.EvalSeparate(seeds[signer], randPolys, ring.Div)
+	for j := 0; j < k; j++ {
+		tupleArray[j] = make([]*pcg.BBSPlusTuple, tau)
 
-		if err != nil {
-			panic(err)
+		for i := 0; i < tau; i++ {
+
+			sharesGen, err := pcgenerator.EvalSeparate(seeds[i], randPolys, ring.Div)
+			if err != nil {
+				panic(err)
+			}
+			tuple := sharesGen.GenBBSPlusTuple(root, signerSet)
+			tupleArray[j][i] = tuple
 		}
-
-		tupleArray[ki] = sharesGen.GenBBSPlusTuple(root, signerSet)
 	}
 
-	return sk, tupleArray
+	return sk, seeds, tupleArray
 }
 
-func GeneratePCFPCGOutputNOutOfN(seedArray [16]uint8, tau int, k int, n int) (*bls12381.Fr, []*pcg.BBSPlusTuple) {
+func GeneratePCFPCGOutputNOutOfN(seedArray [16]uint8, tau int, k int, n int) (*bls12381.Fr, []*pcg.Seed, [][]*pcg.BBSPlusTuple) {
 	c, t := 2, 4
 	N := 10
+
+	if tau != n {
+		panic("threshold must be n")
+	}
 
 	pcgenerator, err := pcg.NewPCG(128, N, n, tau, c, t)
 	if err != nil {
@@ -162,22 +191,25 @@ func GeneratePCFPCGOutputNOutOfN(seedArray [16]uint8, tau int, k int, n int) (*b
 	if err != nil {
 		panic(err)
 	}
-
-	tupleArray := make([]*pcg.BBSPlusTuple, tau)
+	tupleArray := make([][]*pcg.BBSPlusTuple, k)
 
 	root := ring.Roots[10]
 
-	for i := 0; i < tau; i++ {
+	for j := 0; j < k; j++ {
+		tupleArray[j] = make([]*pcg.BBSPlusTuple, tau)
 
-		sharesGen, err := pcgenerator.EvalCombined(seeds[i], randPolys, ring.Div)
-		if err != nil {
-			panic(err)
+		for i := 0; i < tau; i++ {
+
+			sharesGen, err := pcgenerator.EvalCombined(seeds[i], randPolys, ring.Div)
+			if err != nil {
+				panic(err)
+			}
+
+			tuple := sharesGen.GenBBSPlusTuple(root)
+			tupleArray[j][i] = tuple
 		}
-
-		tuple := sharesGen.GenBBSPlusTuple(root)
-		tupleArray[i] = tuple
 	}
-	return sk, tupleArray
+	return sk, seeds, tupleArray
 }
 
 func CreatePPPrecomputation(
