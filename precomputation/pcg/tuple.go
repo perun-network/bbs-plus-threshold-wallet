@@ -183,17 +183,16 @@ func (t *SeparateBBSPlusTupleGenerator) GenBBSPlusTuple(root *bls12381.Fr, signe
 
 	lagrangeCoeff := helper.Get0LagrangeCoefficientSetFr(signerSet)
 
-	var deltaShareFwd, deltaShareAll *bls12381.Fr
-
-	deltaShareAll = bls12381.NewFr().Zero()
+	deltaShareAll := bls12381.NewFr().Zero()
 	delta0ShareOwn := bls12381.NewFr().Zero()
+
+	deltaShareFwd := bls12381.NewFr().Zero()
 
 	indI := 0
 
 	for indJ, signer := range signerSet {
 		if signer != t.ownIndex {
 			// cij * Lj, i = t.ownIndex
-			deltaShareFwd = bls12381.NewFr().One()
 			deltaShareFwd.Mul(t.delta0Poly[signer][forwardDirection].Evaluate(root), lagrangeCoeff[indJ])
 			// cji * Li, i = t.ownIndex
 			delta0ShareOwn.Add(delta0ShareOwn, t.delta0Poly[signer][backwardDirection].Evaluate(root))
@@ -207,7 +206,7 @@ func (t *SeparateBBSPlusTupleGenerator) GenBBSPlusTuple(root *bls12381.Fr, signe
 	// continue with ownIndex calculation,
 	// second term with Li coefficient
 
-	delta0ShareOwn.Mul(lagrangeCoeff[indI], delta0ShareOwn)
+	delta0ShareOwn.Mul(lagrangeCoeff[signerSet[indI]], delta0ShareOwn)
 	deltaShareAll.Add(delta0ShareOwn, deltaShareFwd)
 
 	// delta0 calculation finished

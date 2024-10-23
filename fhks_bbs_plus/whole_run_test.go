@@ -67,9 +67,11 @@ func TestSimpleSigningTauOutOfN(t *testing.T) {
 		for iT := 0; iT < test.Threshold; iT++ {
 			emptyPreSig := fhks_bbs_plus.NewLivePreSignature()
 			pppSigSimple := fhks_bbs_plus.PerPartyPreSignatureSimple{
-				AShare: preComputation[iK][iT].AShare,
-				EShare: preComputation[iK][iT].EShare,
-				SShare: preComputation[iK][iT].SShare,
+				AShare:     preComputation[iK][iT].AShare,
+				EShare:     preComputation[iK][iT].EShare,
+				SShare:     preComputation[iK][iT].SShare,
+				AlphaShare: preComputation[iK][iT].AlphaShare,
+				DeltaShare: preComputation[iK][iT].DeltaShare,
 			}
 			preSig := emptyPreSig.FromPreSignatureShares(&pppSigSimple)
 			x := fhks_bbs_plus.NewPartialThresholdSignature().New(
@@ -142,9 +144,11 @@ func TestSimpleSigningNOutOfN(t *testing.T) {
 			emptyPreSig := fhks_bbs_plus.NewLivePreSignature()
 
 			ppPreSigSimple := fhks_bbs_plus.PerPartyPreSignatureSimple{
-				AShare: preComputation[iK][iT].AShare,
-				EShare: preComputation[iK][iT].EShare,
-				SShare: preComputation[iK][iT].SShare,
+				AShare:     preComputation[iK][iT].AShare,
+				EShare:     preComputation[iK][iT].EShare,
+				SShare:     preComputation[iK][iT].SShare,
+				AlphaShare: preComputation[iK][iT].AlphaShare,
+				DeltaShare: preComputation[iK][iT].DeltaShare,
 			}
 			preSig := emptyPreSig.FromPreSignatureShares(&ppPreSigSimple)
 			x := fhks_bbs_plus.NewPartialThresholdSignature().New(

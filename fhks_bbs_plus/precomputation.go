@@ -22,9 +22,11 @@ type PerPartyPreSignature struct {
 }
 
 type PerPartyPreSignatureSimple struct {
-	AShare *bls12381.Fr
-	EShare *bls12381.Fr
-	SShare *bls12381.Fr
+	AShare     *bls12381.Fr
+	EShare     *bls12381.Fr
+	SShare     *bls12381.Fr
+	AlphaShare *bls12381.Fr
+	DeltaShare *bls12381.Fr
 }
 
 type PerPartyPrecomputations struct {
@@ -76,6 +78,8 @@ func (lps *LivePreSignature) FromPreSignatureShares(preSignature *PerPartyPreSig
 	livePreSignature.AShare.Set(preSignature.AShare)
 	livePreSignature.EShare.Set(preSignature.EShare)
 	livePreSignature.SShare.Set(preSignature.SShare)
+	livePreSignature.AlphaShare.Set(preSignature.AlphaShare)
+	livePreSignature.DeltaShare.Set(preSignature.DeltaShare)
 	return livePreSignature
 }
 
