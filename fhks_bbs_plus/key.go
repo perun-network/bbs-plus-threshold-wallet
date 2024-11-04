@@ -1,6 +1,7 @@
 package fhks_bbs_plus
 
 import (
+	crand "crypto/rand"
 	"encoding/binary"
 	"math/rand"
 
@@ -41,4 +42,19 @@ func GeneratePublicKeyFromRng(rng *rand.Rand, sk *bls12381.Fr, messageCount int)
 		H0: allH[0],
 		H:  allH[1:],
 	}
+}
+
+func (p *PublicKey) MessageCount() int {
+	return len(p.H)
+}
+
+func GenerateSecretKey() *bls12381.Fr {
+	secretKey := bls12381.NewFr()
+
+	_, err := secretKey.Rand(crand.Reader)
+	if err != nil {
+		panic("failed to generate secret key")
+	}
+
+	return secretKey
 }
