@@ -2,12 +2,14 @@ package precomputation
 
 import (
 	"encoding/binary"
+	"math/rand"
+
 	bls12381 "github.com/kilic/bls12-381"
+
 	fhksbbsplus "github.com/perun-network/bbs-plus-threshold-wallet/fhks_bbs_plus"
 	"github.com/perun-network/bbs-plus-threshold-wallet/helper"
 	"github.com/perun-network/bbs-plus-threshold-wallet/precomputation/pcg"
 	"github.com/perun-network/bbs-plus-threshold-wallet/test"
-	"math/rand"
 )
 
 var (
@@ -84,13 +86,13 @@ func GeneratePPPrecomputationTauOutOfN(seedArray [16]uint8, tau, K, N int) (*bls
 	return sk, skSeeds, livePreSignatures
 }
 
-func GeneratePPPrecomputationNOutOfN(seedArray [16]uint8, tau, K, N int) (*bls12381.Fr, []*pcg.Seed, [][]*fhksbbsplus.LivePreSignatureSk) {
-
-	var sk *bls12381.Fr
+func GeneratePPPrecomputationNOutOfN(seedArray [16]uint8, tau, K, n int) (*bls12381.Fr, []*pcg.Seed, [][]*fhksbbsplus.LivePreSignatureSk) {
 	livePreSignatures := make([][]*fhksbbsplus.LivePreSignatureSk, K)
 
-	secretKey, skSeeds, output := GeneratePCFPCGOutputNOutOfN(seedArray, tau, K, N)
-	sk = secretKey
+	if tau != n {
+		panic("threshold must be n")
+	}
+	secretKey, skSeeds, output := GeneratePCFPCGOutputNOutOfN(seedArray, tau, K, n)
 
 	for j := 0; j < K; j++ {
 		livePreSignaturesPerMsg := make([]*fhksbbsplus.LivePreSignatureSk, tau)
@@ -107,7 +109,7 @@ func GeneratePPPrecomputationNOutOfN(seedArray [16]uint8, tau, K, N int) (*bls12
 		livePreSignatures[j] = livePreSignaturesPerMsg
 	}
 
-	return sk, skSeeds, livePreSignatures
+	return secretKey, skSeeds, livePreSignatures
 }
 
 func GeneratePCFPCGOutputMocked(seedArray [16]uint8, t int, k int, n int) PCFPCGOutput {
