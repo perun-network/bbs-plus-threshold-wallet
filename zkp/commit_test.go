@@ -25,7 +25,7 @@ func TestProverCommittingG1_Commit(t *testing.T) {
 func TestProverCommittingG1_CommitWith(t *testing.T) {
 	g1 := bls12381.NewG1()
 	base := g1.One()
-	blindingFactor := fhks_bbs_plus.GenerateSecretKey()
+	blindingFactor := fhks_bbs_plus.GenerateRandomFr()
 
 	pcg := zkp.NewProverCommittingG1()
 	idx := pcg.CommitWith(base, blindingFactor)

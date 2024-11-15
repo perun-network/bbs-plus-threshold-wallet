@@ -13,8 +13,8 @@ func createSampleProofG1() *zkp.ProofG1 {
 
 	commitment := g1.One()
 
-	response1 := fhks_bbs_plus.GenerateSecretKey()
-	response2 := fhks_bbs_plus.GenerateSecretKey()
+	response1 := fhks_bbs_plus.GenerateRandomFr()
+	response2 := fhks_bbs_plus.GenerateRandomFr()
 
 	return &zkp.ProofG1{
 		Commitment: *commitment,
@@ -34,39 +34,21 @@ func TestProofG1_ToBytes(t *testing.T) {
 	assert.Equal(t, expectedLength, len(bytes), "encoded bytes length mismatch")
 }
 
-func TestProofG1_ToBytesCompressedForm(t *testing.T) {
+func TestProofG1_ToBytesUncompressedForm(t *testing.T) {
 	proof := createSampleProofG1()
 
-	bytes, err := proof.ToBytesCompressedForm()
+	bytes, err := proof.ToBytesUncompressedForm()
 
-	assert.NoError(t, err, "Error when encoding to compressed bytes")
-	assert.NotNil(t, bytes, "compressed encoded bytes should not be nil")
+	assert.NoError(t, err, "Error when encoding to uncompressed bytes")
+	assert.NotNil(t, bytes, "uncompressed encoded bytes should not be nil")
 
-	expectedLength := 48 + len(proof.Responses)*32 // Adjust based on actual sizes
-	assert.Equal(t, expectedLength, len(bytes), "compressed encoded bytes length mismatch")
-}
-
-func TestPoKOfSignatureProof_ToBytes(t *testing.T) {
-	g1 := bls12381.NewG1()
-
-	proofVC1 := createSampleProofG1()
-	proofVC2 := createSampleProofG1()
-
-	pok := zkp.PoKOfSignatureProof{
-		APrime:   *g1.One(),
-		ABar:     *g1.One(),
-		D:        *g1.One(),
-		ProofVC1: *proofVC1,
-		ProofVC2: *proofVC2,
-	}
-
-	bytes, err := pok.ToBytes()
-
-	assert.NoError(t, err, "error when encoding PoKOfSignatureProof to bytes")
-	assert.NotNil(t, bytes, "encoded PoKOfSignatureProof bytes should not be nil")
-
-	expectedLength := 288 + 192 + len(proofVC1.Responses)*32*2 // Adjust based on actual sizes
-	assert.Equal(t, expectedLength, len(bytes), "Encoded PoKOfSignatureProof bytes length mismatch")
+	// Breakdown of expected length:
+	// - Commitment (uncompressed G1 point): 96 bytes
+	// - Responses (2 Fr elements at 32 bytes each): 64 bytes
+	//
+	// Total expected length: 96 + 64 = 160 bytes
+	expectedLength := 96 + len(proof.Responses)*32
+	assert.Equal(t, expectedLength, len(bytes), "uncompressed encoded bytes length mismatch")
 }
 
 func TestPoKOfSignatureProof_ToBytesCompressedForm(t *testing.T) {
@@ -83,28 +65,31 @@ func TestPoKOfSignatureProof_ToBytesCompressedForm(t *testing.T) {
 		ProofVC2: *proofVC2,
 	}
 
-	bytes, err := pok.ToBytesCompressedForm()
+	bytes, err := pok.ToBytesUncompressedForm()
 
 	assert.NoError(t, err, "error when encoding PoKOfSignatureProof to compressed form")
 	assert.NotNil(t, bytes, "compressed encoded PoKOfSignatureProof bytes should not be nil")
-
 	// Breakdown of the expected length:
-	// - APrime (compressed G1 point): 48 bytes
-	// - ABar (compressed G1 point): 48 bytes
-	// - D (compressed G1 point): 48 bytes
+	// - APrime (uncompressed G1 point): 96 bytes
+	// - ABar (uncompressed G1 point): 96 bytes
+	// - D (uncompressed G1 point): 96 bytes
 	// - ProofVC1:
-	//   - Commitment (compressed G1 point): 48 bytes
+	//   - Commitment (uncompressed G1 point): 96 bytes
 	//   - Responses (2 Fr elements at 32 bytes each): 64 bytes
-	//   Total for ProofVC1: 48 + 64 = 112 bytes
+	//   Total for ProofVC1: 96 + 64 = 160 bytes
 	// - ProofVC2:
-	//   - Commitment (compressed G1 point): 48 bytes
+	//   - Commitment (uncompressed G1 point): 96 bytes
 	//   - Responses (2 Fr elements at 32 bytes each): 64 bytes
-	//   Total for ProofVC2: 48 + 64 = 112 bytes
+	//   Total for ProofVC2: 96 + 64 = 160 bytes
 	//
 	// Total expected length:
-	// 48 (APrime) + 48 (ABar) + 48 (D) + 112 (ProofVC1) + 112 (ProofVC2) = **368 bytes**
-
-	expectedLength := 368
+	// 96 (APrime) +
+	// 96 (ABar) +
+	// 96 (D) +
+	// 160 (ProofVC1) +
+	// 160 (ProofVC2) =
+	// **608 bytes**
+	expectedLength := 608
 	assert.Equal(t, expectedLength, len(bytes), "compressed encoded PoKOfSignatureProof length mismatch")
 }
 

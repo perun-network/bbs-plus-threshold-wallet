@@ -11,25 +11,12 @@ import (
 	"github.com/perun-network/bbs-plus-threshold-wallet/test"
 )
 
-var (
-	seedPresignatures = [16]uint8{
-		0x59, 0x62, 0xbe, 0x5d, 0x76, 0x3d, 0x31, 0x8d, 0x17, 0xdb, 0x37, 0x32, 0x54, 0x06, 0xbc,
-		0xe5}
-	seedMessages = [16]uint8{
-		0x59, 0x62, 0xbe, 0x5d, 0x76, 0xaa, 0x31, 0x8d, 0x17, 0x14, 0x37, 0x32, 0x37, 0x06, 0xac,
-		0xe5}
-	seedKeys = [16]uint8{
-		0x59, 0x62, 0xaa, 0x5d, 0x76, 0xaa, 0xbb, 0x8d, 0x17, 0x14, 0x37, 0x32, 0x37, 0xcc, 0xac,
-		0xe5}
-	messageCount = 5
-)
-
 func TestSimpleSigningMockedPre(t *testing.T) {
-	messages := helper.GetRandomMessagesFromSeed(seedMessages, test.K, messageCount)
+	messages := helper.GetRandomMessagesFromSeed(test.SeedMessages, test.K, test.MessageCount)
 
-	sk, preComputation := precomputation.GeneratePPPrecomputationMock(seedPresignatures, test.Threshold, test.K, test.N)
+	sk, preComputation := precomputation.GeneratePPPrecomputationMock(test.SeedPresignatures, test.Threshold, test.K, test.N)
 
-	pk := fhks_bbs_plus.GeneratePublicKey(seedKeys, sk, messageCount)
+	pk := fhks_bbs_plus.GeneratePublicKey(test.SeedKeys, sk, test.MessageCount)
 
 	for iK := 0; iK < test.K; iK++ {
 		partialSignatures := make([]*fhks_bbs_plus.PartialThresholdSignature, test.Threshold)
@@ -56,11 +43,11 @@ func TestSimpleSigningMockedPre(t *testing.T) {
 
 func TestSimpleSigningTauOutOfN(t *testing.T) {
 
-	messages := helper.GetRandomMessagesFromSeed(seedMessages, test.K, messageCount)
+	messages := helper.GetRandomMessagesFromSeed(test.SeedMessages, test.K, test.MessageCount)
 
-	sk, _, preComputation := precomputation.GeneratePPPrecomputationTauOutOfN(seedPresignatures, test.Threshold, test.K, test.N)
+	sk, _, preComputation := precomputation.GeneratePPPrecomputationTauOutOfN(test.SeedPresignatures, test.Threshold, test.K, test.N)
 
-	pk := fhks_bbs_plus.GeneratePublicKey(seedKeys, sk, messageCount)
+	pk := fhks_bbs_plus.GeneratePublicKey(test.SeedKeys, sk, test.MessageCount)
 
 	for iK := 0; iK < test.K; iK++ {
 		partialSignatures := make([]*fhks_bbs_plus.PartialThresholdSignature, test.Threshold)
@@ -91,9 +78,9 @@ func TestSimpleSigningTauOutOfN(t *testing.T) {
 
 func TestSimpleSigningNOutOfN(t *testing.T) {
 
-	messages := helper.GetRandomMessagesFromSeed(seedMessages, test.K, messageCount)
+	messages := helper.GetRandomMessagesFromSeed(test.SeedMessages, test.K, test.MessageCount)
 
-	sk, skSeeds, preComputation := precomputation.GeneratePPPrecomputationNOutOfN(seedPresignatures, test.N, test.K, test.N)
+	sk, skSeeds, preComputation := precomputation.GeneratePPPrecomputationNOutOfN(test.SeedPresignatures, test.N, test.K, test.N)
 
 	for j := 0; j < test.K; j++ {
 		totalSkShare := bls12381.NewFr()
@@ -134,7 +121,7 @@ func TestSimpleSigningNOutOfN(t *testing.T) {
 		assert.Equal(t, 0, totalAlphaShare.Cmp(as))
 	}
 
-	pk := fhks_bbs_plus.GeneratePublicKey(seedKeys, sk, messageCount)
+	pk := fhks_bbs_plus.GeneratePublicKey(test.SeedKeys, sk, test.MessageCount)
 
 	// for K no of messages to sign for signers test.Threshold, with N signers because tau == N
 	for iK := 0; iK < test.K; iK++ {

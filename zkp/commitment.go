@@ -8,25 +8,47 @@ import (
 
 type Commitment bls12381.PointG1
 
-func BitvectorToRevealed(bitVector []byte) map[int]struct{} {
-	revealedSet := make(map[int]struct{})
-	for i := 0; i < len(bitVector)*8; i++ {
-		byteIndex := i / 8
-		bitIndex := i % 8
-		if (bitVector[byteIndex] & (1 << bitIndex)) != 0 {
-			revealedSet[i] = struct{}{}
+func BitvectorToRevealed(data []byte) map[int]struct{} {
+	revealedMessages := make(map[int]struct{})
+	scalar := 0
+
+	// Iterate over the byte slice in reverse (big-endian interpretation)
+	for i := len(data) - 1; i >= 0; i-- {
+		v := data[i]   // Get the current byte
+		remaining := 8 // Track remaining bits in the byte
+
+		// Process each bit in the byte
+		for v > 0 {
+			revealed := v & 1 // Check if the least significant bit is set
+			if revealed == 1 {
+				revealedMessages[scalar] = struct{}{} // Add index to revealed set
+			}
+			v >>= 1     // Shift right to process the next bit
+			scalar++    // Increment scalar to track bit position
+			remaining-- // Decrease remaining bits count
 		}
+		scalar += remaining // Skip any remaining bits that are 0
 	}
-	return revealedSet
+
+	return revealedMessages
 }
 
 func RevealedToBitVector(messageCount int, revealedSet map[int]struct{}) []byte {
-	bitVector := make([]byte, (messageCount+7)/8) // Create a bit vector of appropriate size
+	// Allocate enough space for the bit vector (add an extra byte like in Rust)
+	bitVector := make([]byte, (messageCount/8)+1)
+
+	// Set bits corresponding to revealed indices
 	for index := range revealedSet {
 		byteIndex := index / 8
 		bitIndex := index % 8
 		bitVector[byteIndex] |= (1 << bitIndex)
 	}
+
+	// Reverse the byte array to convert to big-endian format
+	for i, j := 0, len(bitVector)-1; i < j; i, j = i+1, j-1 {
+		bitVector[i], bitVector[j] = bitVector[j], bitVector[i]
+	}
+
 	return bitVector
 }
 
@@ -60,7 +82,7 @@ func (pcg *ProverCommittingG1) Commit(base *bls12381.PointG1) int {
 	idx := len(pcg.bases)
 	pcg.bases = append(pcg.bases, *base)
 
-	randFactor := fhks_bbs_plus.GenerateSecretKey()
+	randFactor := fhks_bbs_plus.GenerateRandomFr()
 	pcg.blindingFactors = append(pcg.blindingFactors, randFactor)
 
 	return idx

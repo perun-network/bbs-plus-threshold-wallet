@@ -1,6 +1,7 @@
 package fhks_bbs_plus
 
 import bls12381 "github.com/kilic/bls12-381"
+import "fmt"
 
 type ThresholdSignature struct {
 	CapitalA *bls12381.PointG1
@@ -14,6 +15,36 @@ func NewThresholdSignature() *ThresholdSignature {
 		E:        bls12381.NewFr().Zero(),
 		S:        bls12381.NewFr().Zero(),
 	}
+}
+
+func (sig *ThresholdSignature) ToBytes() ([]byte, error) {
+	var bytes []byte
+
+	// Serialize CapitalA (*bls12381.PointG1) in compressed form (48 bytes)
+	if sig.CapitalA != nil {
+		capitalABytes := bls12381.NewG1().ToCompressed(sig.CapitalA)
+		bytes = append(bytes, capitalABytes...)
+	} else {
+		return nil, fmt.Errorf("CapitalA is nil")
+	}
+
+	// Serialize E (*bls12381.Fr) to bytes (32 bytes)
+	if sig.E != nil {
+		eBytes := sig.E.ToBytes()
+		bytes = append(bytes, eBytes...)
+	} else {
+		return nil, fmt.Errorf("E is nil")
+	}
+
+	// Serialize S (*bls12381.Fr) to bytes (32 bytes)
+	if sig.S != nil {
+		sBytes := sig.S.ToBytes()
+		bytes = append(bytes, sBytes...)
+	} else {
+		return nil, fmt.Errorf("S is nil")
+	}
+
+	return bytes, nil
 }
 
 func (ts *ThresholdSignature) FromPartialSignatures(partialSignatures []*PartialThresholdSignature) *ThresholdSignature {
