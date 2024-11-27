@@ -21,9 +21,6 @@ var (
 	SeedKeys = [16]uint8{
 		0x59, 0x62, 0xaa, 0x5d, 0x76, 0xaa, 0xbb, 0x8d, 0x17, 0x14, 0x37, 0x32, 0x37, 0xcc, 0xac,
 		0xe5}
-	Revealed     = []int{0, 1, 4}
-	MessageCount = 10
-
 	Messages = [][]byte{
 		[]byte("Message1"),
 		[]byte("Message2"),
@@ -36,4 +33,6 @@ var (
 		[]byte("Message9"),
 		[]byte("Message10"),
 	}
+	Revealed     = []int{0, 2}
+	MessageCount = 5
 )

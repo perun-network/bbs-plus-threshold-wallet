@@ -15,11 +15,9 @@ func TestProverCommittingG1_Commit(t *testing.T) {
 	base := g1.One()
 
 	pcg := zkp.NewProverCommittingG1()
-	idx := pcg.Commit(base)
-
-	assert.Equal(t, 0, idx, "Index should be 0 for the first commitment")
-	assert.Equal(t, 1, len(pcg.GetBasePoints()), "There should be one base after commit")
-	assert.NotNil(t, pcg.GetBlindingFactors(), "Blinding factor should not be nil")
+	pcg.Commit(base)
+	assert.Equal(t, 1, len(pcg.GetBasePoints()), "there should be one base after commit")
+	assert.NotNil(t, pcg.GetBlindingFactors(), "blinding factor should not be nil")
 }
 
 func TestProverCommittingG1_CommitWith(t *testing.T) {
@@ -30,11 +28,10 @@ func TestProverCommittingG1_CommitWith(t *testing.T) {
 	pcg := zkp.NewProverCommittingG1()
 	idx := pcg.CommitWith(base, blindingFactor)
 
-	assert.Equal(t, 0, idx, "Index should be 0 for the first commitment")
-	assert.Equal(t, 1, len(pcg.GetBasePoints()), "There should be one base after commit")
+	assert.Equal(t, 0, idx, "index should be 0 for the first commitment")
+	assert.Equal(t, 1, len(pcg.GetBasePoints()), "there should be one base after commit")
 
-	// Compare the first element of the blinding factors slice
-	assert.Equal(t, blindingFactor, pcg.GetBlindingFactors()[0], "Blinding factor should match the one provided")
+	assert.Equal(t, blindingFactor, pcg.GetBlindingFactors()[0], "blinding factor should match the one provided")
 }
 
 func TestProverCommittingG1_Finish(t *testing.T) {
@@ -45,5 +42,5 @@ func TestProverCommittingG1_Finish(t *testing.T) {
 	pcg.Commit(base)
 	committed := pcg.Finish()
 
-	assert.NotNil(t, committed.Commitment, "Commitment should not be nil after finish")
+	assert.NotNil(t, committed.Commitment, "commitment should not be nil after finish")
 }

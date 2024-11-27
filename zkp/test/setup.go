@@ -1,18 +1,12 @@
 package test
 
 import (
-	bls12381 "github.com/kilic/bls12-381"
 	"github.com/perun-network/bbs-plus-threshold-wallet/fhks_bbs_plus"
-	"github.com/perun-network/bbs-plus-threshold-wallet/helper"
-
-	"github.com/perun-network/bbs-plus-threshold-wallet/test"
 	"github.com/perun-network/bbs-plus-threshold-wallet/zkp"
 
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
-
-var RevealedTest = []int{0, 2}
 
 type KeyPairTest struct {
 	SecretKey fhks_bbs_plus.SecretKey
@@ -33,15 +27,11 @@ func CreateProofReqNoNonce(t *testing.T, kp KeyPairTest, msgs [][]byte, revealed
 
 	pk := kp.PublicKey
 
-	hashMsgs := make([]*bls12381.Fr, len(msgs))
+	frMsgs := zkp.ByteMsgToFr(msgs)
 
-	for i, msg := range msgs {
-		hashMsgs[i] = helper.HashToFr(msg)
-	}
+	sig := kp.SecretKey.Sign(pk, frMsgs, e, s)
 
-	sig := kp.SecretKey.Sign(pk, hashMsgs, e, s)
-
-	ok := pk.Verify(hashMsgs, sig)
+	ok := pk.Verify(frMsgs, sig)
 	assert.True(t, ok, "signature verification failed")
 
 	proofNoChall := zkp.CreateProofRequest{
@@ -54,48 +44,7 @@ func CreateProofReqNoNonce(t *testing.T, kp KeyPairTest, msgs [][]byte, revealed
 	return proofNoChall
 }
 
-func CreateProofRequest(t *testing.T, kp KeyPairTest) zkp.CreateProofRequest {
-	msgs := test.Messages
-	rev := test.Revealed
-	CheckRevealedIndices(t, msgs, rev)
-
-	e := fhks_bbs_plus.GenerateRandomFr()
-	s := fhks_bbs_plus.GenerateRandomFr()
-
-	pk := kp.PublicKey
-
-	hashMsgs := make([]*bls12381.Fr, len(msgs))
-
-	for i, msg := range msgs {
-		hashMsgs[i] = helper.HashToFr(msg)
-	}
-
-	sig := kp.SecretKey.Sign(pk, hashMsgs, e, s)
-
-	ok := pk.Verify(hashMsgs, sig)
-
-	proofNoChall := zkp.CreateProofRequest{
-		Signature: *sig,
-		PublicKey: pk,
-		Messages:  msgs,
-		Revealed:  rev,
-	}
-
-	_, proofBBSBytes, err := zkp.CreateProofBBS(proofNoChall)
-	assert.NoError(t, err, "error when creating BBS proof")
-
-	assert.True(t, ok, "signature verification failed")
-	return zkp.CreateProofRequest{
-		Signature: *sig,
-		PublicKey: pk,
-		Messages:  msgs,
-		Revealed:  rev,
-		Nonce:     proofBBSBytes,
-	}
-}
-
 func CheckRevealedIndices(t *testing.T, msgs [][]byte, revealed []int) {
-	// Step 1: Find the maximum index in Revealed
 	maxIndex := -1
 	for _, index := range revealed {
 		if index > maxIndex {
@@ -103,6 +52,5 @@ func CheckRevealedIndices(t *testing.T, msgs [][]byte, revealed []int) {
 		}
 	}
 
-	// Step 2: Assert that the highest entry in Revealed is at most len(msgs) - 1
 	assert.LessOrEqual(t, maxIndex, len(msgs)-1, "the highest revealed index exceeds the number of messages")
 }

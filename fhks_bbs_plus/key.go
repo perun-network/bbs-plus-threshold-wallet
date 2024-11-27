@@ -4,6 +4,7 @@ import (
 	crand "crypto/rand"
 	"encoding/binary"
 	"errors"
+	"github.com/perun-network/bbs-plus-threshold-wallet/helper"
 	"math/rand"
 
 	bls12381 "github.com/kilic/bls12-381"
@@ -145,4 +146,60 @@ func (pk *PublicKey) Validate() error {
 	}
 
 	return nil
+}
+
+func (pk *PublicKey) Serialize() []byte {
+	ser := make([]byte, 0)
+
+	g2 := bls12381.NewG2()
+	g1 := bls12381.NewG1()
+
+	bytesW := g2.ToCompressed(pk.W)
+
+	ser = append(ser, bytesW...)
+
+	bytesH0 := g1.ToCompressed(pk.H0)
+
+	ser = append(ser, bytesH0...)
+
+	for _, h := range pk.H {
+		bytesH := g1.ToCompressed(h)
+
+		ser = append(ser, bytesH...)
+	}
+	return ser
+}
+
+func DeserializePublicKey(serialized []byte) (*PublicKey, error) {
+	g1 := bls12381.NewG1()
+	g2 := bls12381.NewG2()
+
+	if len(serialized) < 2*helper.LenBytesG2Compressed+helper.LenBytesG1Compressed {
+		return nil, errors.New("invalid public key length")
+	}
+
+	w, err := g2.FromCompressed(serialized[:helper.LenBytesG2Compressed])
+	if err != nil {
+		return nil, err
+	}
+
+	h0, err := g1.FromCompressed(serialized[helper.LenBytesG2Compressed : helper.LenBytesG2Compressed+helper.LenBytesG1Compressed])
+	if err != nil {
+		return nil, err
+	}
+
+	h := make([]*bls12381.PointG1, 0)
+	for i := helper.LenBytesG2Compressed + helper.LenBytesG1Compressed; i < len(serialized); i += helper.LenBytesG1Compressed {
+		hElem, err := g1.FromCompressed(serialized[i : i+helper.LenBytesG1Compressed])
+		if err != nil {
+			return nil, err
+		}
+		h = append(h, hElem)
+	}
+
+	return &PublicKey{
+		W:  w,
+		H0: h0,
+		H:  h,
+	}, nil
 }
