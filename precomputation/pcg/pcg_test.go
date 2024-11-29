@@ -75,6 +75,86 @@ func TestPCGCombinedEnd2End(t *testing.T) {
 	assert.Equal(t, 0, alpha.Cmp(as))
 }
 
+func TestPCGCombinedEnd2EndTau3N3(t *testing.T) {
+	pcg, err := NewPCG(128, 10, 3, 3, 2, 4) // Small lpn parameters for testing.
+	assert.Nil(t, err)
+
+	seeds, err := pcg.TrustedSeedGen()
+	assert.Nil(t, err)
+	assert.NotNil(t, seeds)
+
+	randPolys, err := pcg.PickRandomPolynomials()
+	assert.Nil(t, err)
+	assert.NotNil(t, randPolys)
+
+	ring, err := pcg.GetRing(false)
+	assert.Nil(t, err)
+	assert.NotNil(t, ring)
+
+	eval0, err := pcg.EvalCombined(seeds[0], randPolys, ring.Div)
+	assert.Nil(t, err)
+	assert.NotNil(t, eval0)
+
+	eval1, err := pcg.EvalCombined(seeds[1], randPolys, ring.Div)
+	assert.Nil(t, err)
+	assert.NotNil(t, eval1)
+
+	eval2, err := pcg.EvalCombined(seeds[2], randPolys, ring.Div)
+	assert.Nil(t, err)
+	assert.NotNil(t, eval2)
+
+	keyNr := 9
+	root := ring.Roots[keyNr]
+
+	tuple0 := eval0.GenBBSPlusTuple(root)
+	tuple1 := eval1.GenBBSPlusTuple(root)
+	tuple2 := eval2.GenBBSPlusTuple(root)
+
+	sk := bls12381.NewFr().Zero()
+	sk.Add(tuple0.SkShare, tuple1.SkShare)
+	sk.Add(sk, tuple2.SkShare)
+
+	seedSk := bls12381.NewFr().Zero()
+	seedSk.Add(seeds[0].ski, seeds[1].ski)
+	seedSk.Add(seedSk, seeds[2].ski)
+	assert.Equal(t, 0, sk.Cmp(seedSk))
+
+	a := bls12381.NewFr().Zero() // Sum up a0 and a1
+	a.Add(tuple0.AShare, tuple1.AShare)
+	a.Add(a, tuple2.AShare)
+
+	s := bls12381.NewFr().Zero() // Sum up s0 and s1
+	s.Add(tuple0.SShare, tuple1.SShare)
+	s.Add(s, tuple2.SShare)
+
+	e := bls12381.NewFr().Zero() // Sum up e0 and e1
+	e.Add(tuple0.EShare, tuple1.EShare)
+	e.Add(e, tuple2.EShare)
+
+	alpha := bls12381.NewFr().Zero()
+	alpha.Add(tuple0.AlphaShare, tuple1.AlphaShare)
+	alpha.Add(alpha, tuple2.AlphaShare)
+
+	delta := bls12381.NewFr().Zero()
+	delta.Add(tuple0.DeltaShare, tuple1.DeltaShare)
+	delta.Add(delta, tuple2.DeltaShare)
+
+	ask := bls12381.NewFr().Zero() // = delta0
+	ask.Mul(a, sk)
+
+	ae := bls12381.NewFr().Zero() // = delta1
+	ae.Mul(a, e)
+
+	// Check if correlations hold
+	askPae := bls12381.NewFr().Zero() // = a(sk + e)
+	askPae.Add(ask, ae)
+	assert.Equal(t, 0, delta.Cmp(askPae))
+
+	as := bls12381.NewFr().Zero()
+	as.Mul(a, s)
+	assert.Equal(t, 0, alpha.Cmp(as))
+}
+
 func TestPCGSeparateEnd2End(t *testing.T) {
 	pcg, err := NewPCG(128, 10, 3, 2, 2, 4) // Small lpn parameters for testing.
 	assert.Nil(t, err)
