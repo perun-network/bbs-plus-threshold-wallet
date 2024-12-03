@@ -3,13 +3,15 @@ package pcg
 import (
 	"encoding/binary"
 	"fmt"
-	bls12381 "github.com/kilic/bls12-381"
-	"github.com/perun-network/bbs-plus-threshold-wallet/precomputation/pcg/poly"
 	"math/big"
 	"math/rand"
 	"runtime"
 	"sort"
 	"sync"
+
+	bls12381 "github.com/kilic/bls12-381"
+
+	"github.com/perun-network/bbs-plus-threshold-wallet/precomputation/pcg/poly"
 )
 
 const forwardDirection = 0
@@ -23,6 +25,23 @@ func getShamirSharedRandomElement(rng *rand.Rand, t, n int) (*bls12381.Fr, []*bl
 	_, err := secretKeyElement.Rand(rng)
 	if err != nil {
 		panic(err)
+	}
+
+	// TODO: Maybe only required for the tests
+	if t == n {
+		shares := make([]*bls12381.Fr, n)
+		shares[n-1] = bls12381.NewFr().Zero()
+		for i := 0; i < n-1; i++ {
+			shares[i] = bls12381.NewFr()
+			_, err := shares[i].Rand(rng)
+			if err != nil {
+				panic(err)
+			}
+			shares[n-1].Add(shares[n-1], shares[i])
+		}
+		// only compute last share based on the other shares and the secret key
+		shares[n-1].Sub(secretKeyElement, shares[n-1])
+		return secretKeyElement, shares
 	}
 
 	// Shamir Coefficients
@@ -592,9 +611,9 @@ func (p *PCG) embedVOLECorrelations(omega [][][]*big.Int, beta [][][]*bls12381.F
 			if i != j {
 				for r := 0; r < p.c; r++ {
 					skShareIndex := j
-					if j > 1 {
-						skShareIndex = 1 // We do this here as we do not interpolate (for testing only)
-					}
+					//if j > 1 {
+					//	skShareIndex = 1 // We do this here as we do not interpolate (for testing only)
+					//}
 
 					nonZeroElements := scalarMulFr(skShares[skShareIndex], beta[i][r])
 					key0, key1, err := p.dspfN.Gen(omega[i][r], frSliceToBigIntSlice(nonZeroElements))

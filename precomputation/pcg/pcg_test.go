@@ -1,10 +1,12 @@
 package pcg
 
 import (
-	bls12381 "github.com/kilic/bls12-381"
-	"github.com/stretchr/testify/assert"
+	"fmt"
 	"math/big"
 	"testing"
+
+	bls12381 "github.com/kilic/bls12-381"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPCGCombinedEnd2End(t *testing.T) {
@@ -114,6 +116,8 @@ func TestPCGCombinedEnd2EndTau3N3(t *testing.T) {
 	sk.Add(tuple0.SkShare, tuple1.SkShare)
 	sk.Add(sk, tuple2.SkShare)
 
+	fmt.Printf("sk: %v\n", sk)
+
 	seedSk := bls12381.NewFr().Zero()
 	seedSk.Add(seeds[0].ski, seeds[1].ski)
 	seedSk.Add(seedSk, seeds[2].ski)
@@ -145,14 +149,29 @@ func TestPCGCombinedEnd2EndTau3N3(t *testing.T) {
 	ae := bls12381.NewFr().Zero() // = delta1
 	ae.Mul(a, e)
 
+	delta1 := bls12381.NewFr().Zero()
+	delta1.Add(tuple0.DeltaShare1, tuple1.DeltaShare1)
+	delta1.Add(delta1, tuple2.DeltaShare1)
+
+	delta2 := bls12381.NewFr().Zero()
+	delta2.Add(tuple0.DeltaShare2, tuple1.DeltaShare2)
+	delta2.Add(delta2, tuple2.DeltaShare2)
+
+	deltaX := bls12381.NewFr().Zero()
+	deltaX.Add(delta1, delta2)
+	fmt.Println("delta == deltaX:", delta.Cmp(deltaX) == 0)
+	fmt.Println("delta1 == ae:", delta1.Cmp(ae) == 0)
+	fmt.Println("delta0 == ask:", delta2.Cmp(ask) == 0)
+
 	// Check if correlations hold
+	as := bls12381.NewFr().Zero()
+	as.Mul(a, s)
+	assert.Equal(t, 0, alpha.Cmp(as))
+
 	askPae := bls12381.NewFr().Zero() // = a(sk + e)
 	askPae.Add(ask, ae)
 	assert.Equal(t, 0, delta.Cmp(askPae))
 
-	as := bls12381.NewFr().Zero()
-	as.Mul(a, s)
-	assert.Equal(t, 0, alpha.Cmp(as))
 }
 
 func TestPCGSeparateEnd2End(t *testing.T) {
