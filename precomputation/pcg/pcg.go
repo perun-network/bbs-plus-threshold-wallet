@@ -184,9 +184,6 @@ func (p *PCG) TrustedSeedGen() ([]*Seed, error) {
 	seeds := make([]*Seed, p.n)
 	for i := 0; i < p.n; i++ {
 		keyIndex := i
-		if i > 1 {
-			keyIndex = 1 // We set the key index for all parties > 1 to 1, as we do not interpolate the key shares (only for testing as this has no performance impact on Eval)
-		}
 		seeds[i] = &Seed{
 			index: i,
 			ski:   skShares[keyIndex],
