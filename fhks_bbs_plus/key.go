@@ -4,6 +4,7 @@ import (
 	crand "crypto/rand"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"github.com/perun-network/bbs-plus-threshold-wallet/helper"
 	"math/rand"
 
@@ -12,6 +13,64 @@ import (
 
 type SecretKey struct {
 	*bls12381.Fr
+}
+
+func (sk *SecretKey) Serialize() []byte {
+	return sk.Fr.ToBytes()
+}
+
+func (sk *SecretKey) Deserialize(serialized []byte) error {
+	sk.Fr = bls12381.NewFr()
+	sk.Fr.FromBytes(serialized)
+	return nil
+}
+
+type PartySecretKey struct {
+	SKeyShare SecretKey
+	PublicKey *bls12381.PointG2
+	Index     int
+}
+
+func (ppk *PartySecretKey) Marshal() ([]byte, error) {
+	g2 := bls12381.NewG2()
+
+	skShareBytes := ppk.SKeyShare.ToBytes()
+
+	pkBytes := g2.ToCompressed(ppk.PublicKey)
+
+	indexBytes := make([]byte, 4)
+	binary.LittleEndian.PutUint32(indexBytes, uint32(ppk.Index))
+
+	bytes := append(skShareBytes, pkBytes...)
+	bytes = append(bytes, indexBytes...)
+
+	return bytes, nil
+}
+
+func UnmarshalPartyPrivateKey(partyPrivKeyBytes []byte) (*PartySecretKey, error) {
+	g2 := bls12381.NewG2()
+	fr := bls12381.NewFr()
+
+	expectedLength := helper.LenBytesFr + helper.LenBytesG2Compressed + 4 // Adjust lengths accordingly
+
+	if len(partyPrivKeyBytes) != expectedLength {
+		return nil, errors.New("invalid size of party private key")
+	}
+
+	skShare := fr.FromBytes(partyPrivKeyBytes[:helper.LenBytesFr])
+
+	publicKey, err := g2.FromCompressed(partyPrivKeyBytes[helper.LenBytesFr : helper.LenBytesFr+helper.LenBytesG2Compressed])
+	if err != nil {
+		return nil, fmt.Errorf("deserialize G2 compressed public key: %w", err)
+	}
+
+	index := int(binary.LittleEndian.Uint32(partyPrivKeyBytes[helper.LenBytesFr+helper.LenBytesG2Compressed:]))
+
+	return &PartySecretKey{
+		SKeyShare: SecretKey{skShare},
+		PublicKey: publicKey,
+		Index:     index,
+	}, nil
 }
 
 type PublicKey struct {

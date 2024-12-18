@@ -10,7 +10,7 @@ import (
 )
 
 func TestSignVerify(t *testing.T) {
-	kp := zkptest.CreateTestingKP(t, len(test.Messages))
+	kp := zkptest.CreateTestKeyPair(t, len(test.Messages))
 	e := fhks_bbs_plus.GenerateRandomFr()
 	s := fhks_bbs_plus.GenerateRandomFr()
 
@@ -24,7 +24,7 @@ func TestNewCreateProof(t *testing.T) {
 	msgNum := 5
 	msgs := test.Messages[:msgNum]
 
-	kp := zkptest.CreateTestingKP(t, msgNum)
+	kp := zkptest.CreateTestKeyPair(t, msgNum)
 
 	revealed := test.Revealed
 	proofRqNoNonce := zkptest.CreateProofReqNoNonce(t, kp, msgs, revealed)
@@ -42,7 +42,7 @@ func TestVerifyBBSProof(t *testing.T) {
 	msgNum := 5
 	msgs := test.Messages[:msgNum]
 
-	kp := zkptest.CreateTestingKP(t, msgNum)
+	kp := zkptest.CreateTestKeyPair(t, msgNum)
 
 	revealed := test.Revealed
 	proofRqNoNonce := zkptest.CreateProofReqNoNonce(t, kp, msgs, revealed)

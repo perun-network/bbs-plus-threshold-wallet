@@ -13,7 +13,7 @@ type KeyPairTest struct {
 	PublicKey fhks_bbs_plus.PublicKey
 }
 
-func CreateTestingKP(t *testing.T, msgCount int) KeyPairTest {
+func CreateTestKeyPair(t *testing.T, msgCount int) KeyPairTest {
 	sk := fhks_bbs_plus.SecretKey{Fr: fhks_bbs_plus.GenerateRandomFr()}
 	pk := *sk.GetPublicKey(msgCount)
 	return KeyPairTest{SecretKey: sk, PublicKey: pk}

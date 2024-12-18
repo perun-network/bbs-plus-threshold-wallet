@@ -83,37 +83,28 @@ func TestProverCommittedG1_ToBytes(t *testing.T) {
 }
 
 func TestPubKeySerializeDeserialize(t *testing.T) {
-	// Step 1: Create a testing key pair with 5 generators
-	kpTest := zkptest.CreateTestingKP(t, 5)
+	kpTest := zkptest.CreateTestKeyPair(t, 5)
 
-	// Extract the public key
 	pubKey := kpTest.PublicKey
 
-	// Step 2: Serialize the public key
 	serializedPk := pubKey.Serialize()
 	assert.NotNil(t, serializedPk, "serialized public key should not be nil")
 	assert.Greater(t, len(serializedPk), 0, "serialized public key should not be empty")
 
-	// Step 3: Deserialize the serialized bytes back into a PublicKey
 	deserializedPubKey, err := fhks_bbs_plus.DeserializePublicKey(serializedPk)
 	assert.NoError(t, err, "deserialization of public key should not return an error")
 	assert.NotNil(t, deserializedPubKey, "deserialized public key should not be nil")
 
-	// Step 4: Verify that the deserialized public key matches the original
-
-	// Test W component
 	g2 := bls12381.NewG2()
 	diffG2Point := &bls12381.PointG2{}
 	g2.Sub(diffG2Point, deserializedPubKey.W, pubKey.W)
 	assert.True(t, g2.IsZero(diffG2Point), "W component of the public key does not match")
 
-	// Test H0 component
 	g1 := bls12381.NewG1()
 	diffG1PointH0 := &bls12381.PointG1{}
 	g1.Sub(diffG1PointH0, deserializedPubKey.H0, pubKey.H0)
 	assert.True(t, g1.IsZero(diffG1PointH0), "H0 component of the public key does not match")
 
-	// Test H components
 	assert.Equal(t, len(pubKey.H), len(deserializedPubKey.H), "length of H components does not match")
 	for i := range pubKey.H {
 		diffG1PointH := &bls12381.PointG1{}
@@ -128,7 +119,7 @@ func TestThresholdSignatureSerializeDeserialize(t *testing.T) {
 	msgNum := 5
 	msgs := test.Messages[:msgNum]
 
-	kp := zkptest.CreateTestingKP(t, msgNum)
+	kp := zkptest.CreateTestKeyPair(t, msgNum)
 
 	revealed := []int{0, 2}
 	proofRqNoNonce := zkptest.CreateProofReqNoNonce(t, kp, msgs, revealed)
@@ -139,7 +130,6 @@ func TestThresholdSignatureSerializeDeserialize(t *testing.T) {
 	assert.NotNil(t, bytes, "serialized signature should not be nil")
 	assert.Equal(t, len(bytes), 48+32+32, "serialized signature should have correct length")
 
-	// Deserialize the signature
 	deserializedSig, err := fhks_bbs_plus.ThresholdSignatureFromBytes(bytes)
 	assert.NoError(t, err, "deserialization should not return an error")
 	assert.NotNil(t, deserializedSig, "deserialized signature should not be nil")

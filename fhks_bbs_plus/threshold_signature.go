@@ -20,7 +20,6 @@ func NewThresholdSignature() *ThresholdSignature {
 	}
 }
 func (s *ThresholdSignature) ToBytes() ([]byte, error) {
-
 	bytes := make([]byte, helper.LenBytesG1Compressed+2*helper.LenBytesFr)
 
 	g1 := bls12381.NewG1()

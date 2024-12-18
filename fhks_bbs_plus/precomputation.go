@@ -1,8 +1,10 @@
 package fhks_bbs_plus
 
 import (
+	"encoding/binary"
+	"errors"
+	"fmt"
 	bls12381 "github.com/kilic/bls12-381"
-
 	"github.com/perun-network/bbs-plus-threshold-wallet/helper"
 )
 
@@ -33,6 +35,243 @@ type PerPartyPrecomputations struct {
 	Index         int // Position at which sk-polynomial for own secret key share is evaluated.
 	SkShare       *bls12381.Fr
 	PreSignatures []*PerPartyPreSignature
+}
+
+type PerPartyPrecomputationsWithPubKey struct {
+	Index         int // Position at which sk-polynomial for own secret key share is evaluated.
+	SkShare       *bls12381.Fr
+	PreSignatures []*PerPartyPreSignature
+	PublicKey     *bls12381.PointG2
+}
+
+func SerializeAeTermsA(aeTermsA []*bls12381.Fr) ([]byte, error) {
+	lengthBytes := make([]byte, 4)
+	binary.LittleEndian.PutUint32(lengthBytes, uint32(len(aeTermsA)))
+
+	var dataBytes []byte
+	for _, elem := range aeTermsA {
+		dataBytes = append(dataBytes, elem.ToBytes()...)
+	}
+
+	return append(lengthBytes, dataBytes...), nil
+}
+func DeserializeAeTermsA(data []byte) ([]*bls12381.Fr, error) {
+	if len(data) < 4 {
+		return nil, errors.New("data too short to contain length")
+	}
+
+	length := int(binary.LittleEndian.Uint32(data[:4]))
+	data = data[4:]
+
+	elementSize := helper.LenBytesFr
+	expectedDataLength := length * elementSize
+	if len(data) != expectedDataLength {
+		return nil, fmt.Errorf("data length mismatch: expected %d bytes, got %d bytes", expectedDataLength, len(data))
+	}
+
+	elements := make([]*bls12381.Fr, length)
+	for i := 0; i < length; i++ {
+		start := i * elementSize
+		end := start + elementSize
+		elements[i] = bls12381.NewFr().FromBytes(data[start:end])
+	}
+
+	return elements, nil
+}
+func (ppp *PerPartyPreSignature) ToBytes() ([]byte, error) {
+	aShareBytes := ppp.AShare.ToBytes()
+	eShareBytes := ppp.EShare.ToBytes()
+	sShareBytes := ppp.SShare.ToBytes()
+	aeTermOwnBytes := ppp.AeTermOwn.ToBytes()
+	asTermOwnBytes := ppp.AsTermOwn.ToBytes()
+	askTermOwnBytes := ppp.AskTermOwn.ToBytes()
+
+	serializeFrSlice := func(slice []*bls12381.Fr) ([]byte, error) {
+		lengthBytes := make([]byte, 4)
+		binary.LittleEndian.PutUint32(lengthBytes, uint32(len(slice)))
+
+		var data []byte
+		for _, elem := range slice {
+			data = append(data, elem.ToBytes()...)
+		}
+
+		return append(lengthBytes, data...), nil
+	}
+
+	aeTermsABytes, err := serializeFrSlice(ppp.AeTermsA)
+	if err != nil {
+		return nil, err
+	}
+	aeTermsEBytes, err := serializeFrSlice(ppp.AeTermsE)
+	if err != nil {
+		return nil, err
+	}
+	asTermsABytes, err := serializeFrSlice(ppp.AsTermsA)
+	if err != nil {
+		return nil, err
+	}
+	asTermsSBytes, err := serializeFrSlice(ppp.AsTermsS)
+	if err != nil {
+		return nil, err
+	}
+	askTermsABytes, err := serializeFrSlice(ppp.AskTermsA)
+	if err != nil {
+		return nil, err
+	}
+	askTermsSKBytes, err := serializeFrSlice(ppp.AskTermsSK)
+	if err != nil {
+		return nil, err
+	}
+
+	result := append(aShareBytes, eShareBytes...)
+	result = append(result, sShareBytes...)
+	result = append(result, aeTermOwnBytes...)
+	result = append(result, asTermOwnBytes...)
+	result = append(result, askTermOwnBytes...)
+	result = append(result, aeTermsABytes...)
+	result = append(result, aeTermsEBytes...)
+	result = append(result, asTermsABytes...)
+	result = append(result, asTermsSBytes...)
+	result = append(result, askTermsABytes...)
+	result = append(result, askTermsSKBytes...)
+
+	return result, nil
+}
+func FromBytes(data []byte) (*PerPartyPreSignature, *bls12381.Fr, error) {
+
+	readFr := func(data []byte) (*bls12381.Fr, []byte) {
+		element := bls12381.NewFr().FromBytes(data[:helper.LenBytesFr])
+		copiedElement := bls12381.NewFr()
+		copiedElement.Set(element) // Assuming Set() exists for copying values
+		return copiedElement, data[helper.LenBytesFr:]
+	}
+
+	readFrSlice := func(data []byte) ([]*bls12381.Fr, []byte, error) {
+		if len(data) < 4 {
+			return nil, nil, errors.New("data too short to contain length")
+		}
+
+		length := int(binary.LittleEndian.Uint32(data[:4]))
+		data = data[4:]
+
+		elementSize := helper.LenBytesFr
+		if len(data) < length*elementSize {
+			return nil, nil, errors.New("data too short to contain all elements")
+		}
+
+		slice := make([]*bls12381.Fr, length)
+		for i := 0; i < length; i++ {
+			element := bls12381.NewFr().FromBytes(data[i*elementSize : (i+1)*elementSize])
+			copiedElement := bls12381.NewFr()
+			copiedElement.Set(element)
+			slice[i] = copiedElement
+		}
+
+		return slice, data[length*elementSize:], nil
+	}
+
+	aShare, data := readFr(data)
+	eShare, data := readFr(data)
+	sShare, data := readFr(data)
+	aeTermOwn, data := readFr(data)
+	asTermOwn, data := readFr(data)
+	askTermOwn, data := readFr(data)
+
+	var aeTermsA []*bls12381.Fr
+	var aeTermsE []*bls12381.Fr
+	var asTermsA []*bls12381.Fr
+	var asTermsS []*bls12381.Fr
+	var askTermsA []*bls12381.Fr
+	var askTermsSK []*bls12381.Fr
+
+	var err error
+
+	if aeTermsA, data, err = readFrSlice(data); err != nil {
+		return nil, nil, err
+	}
+	if aeTermsE, data, err = readFrSlice(data); err != nil {
+		return nil, nil, err
+	}
+	if asTermsA, data, err = readFrSlice(data); err != nil {
+		return nil, nil, err
+	}
+	if asTermsS, data, err = readFrSlice(data); err != nil {
+		return nil, nil, err
+	}
+	if askTermsA, data, err = readFrSlice(data); err != nil {
+		return nil, nil, err
+	}
+	if askTermsSK, _, err = readFrSlice(data); err != nil {
+		return nil, nil, err
+	}
+
+	return &PerPartyPreSignature{
+		AShare:     aShare,
+		EShare:     eShare,
+		SShare:     sShare,
+		AeTermOwn:  aeTermOwn,
+		AsTermOwn:  asTermOwn,
+		AskTermOwn: askTermOwn,
+		AeTermsA:   aeTermsA,
+		AeTermsE:   aeTermsE,
+		AsTermsA:   asTermsA,
+		AsTermsS:   asTermsS,
+		AskTermsA:  askTermsA,
+		AskTermsSK: askTermsSK,
+	}, aShare, nil
+}
+
+func (ppp *PerPartyPrecomputationsWithPubKey) ToBytes() ([]byte, error) {
+	preSigsLenBytes := make([]byte, helper.IntSize)
+
+	binary.LittleEndian.PutUint32(preSigsLenBytes, uint32(len(ppp.PreSignatures)))
+	indexBytes := make([]byte, helper.IntSize)
+	binary.LittleEndian.PutUint32(indexBytes, uint32(ppp.Index))
+
+	skShareBytes := ppp.SkShare.ToBytes()
+
+	g2 := bls12381.NewG2()
+	pkBytes := g2.ToCompressed(ppp.PublicKey)
+
+	bytes := append(skShareBytes, pkBytes...)
+	bytes = append(bytes, indexBytes...)
+
+	for _, preSignature := range ppp.PreSignatures {
+		asBytes := preSignature.AShare.ToBytes()
+		esBytes := preSignature.EShare.ToBytes()
+		ssBytes := preSignature.SShare.ToBytes()
+		aeBytes := preSignature.AeTermOwn.ToBytes()
+		asBytesOwn := preSignature.AsTermOwn.ToBytes()
+		askBytes := preSignature.AskTermOwn.ToBytes()
+
+		bytes = append(bytes, asBytes...)
+		bytes = append(bytes, esBytes...)
+		bytes = append(bytes, ssBytes...)
+		bytes = append(bytes, aeBytes...)
+		bytes = append(bytes, asBytesOwn...)
+		bytes = append(bytes, askBytes...)
+
+		for _, ae := range preSignature.AeTermsA {
+			bytes = append(bytes, ae.ToBytes()...)
+		}
+		for _, ae := range preSignature.AeTermsE {
+			bytes = append(bytes, ae.ToBytes()...)
+		}
+		for _, as := range preSignature.AsTermsA {
+			bytes = append(bytes, as.ToBytes()...)
+		}
+		for _, as := range preSignature.AsTermsS {
+			bytes = append(bytes, as.ToBytes()...)
+		}
+		for _, ask := range preSignature.AskTermsA {
+			bytes = append(bytes, ask.ToBytes()...)
+		}
+		for _, ask := range preSignature.AskTermsSK {
+			bytes = append(bytes, ask.ToBytes()...)
+		}
+	}
+
+	return bytes, nil
 }
 
 type PerPartyPrecomputationsSimple struct {

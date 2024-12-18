@@ -76,7 +76,6 @@ func CreateProofBBS(messages [][]byte, sigBytes, nonce, pubKeyBytes []byte,
 		return nil, fmt.Errorf("failed to initialize PoKOfSignature: %v", err)
 	}
 
-	// Step 4: Generate challenge bytes
 	challengeBytes, err := pok.ToBytes()
 	if err != nil {
 		return nil, fmt.Errorf("failed to serialize PoKOfSignature: %v", err)
@@ -91,7 +90,6 @@ func CreateProofBBS(messages [][]byte, sigBytes, nonce, pubKeyBytes []byte,
 
 	challenge := &ProofChallenge{Fr: challFr}
 
-	// Step 5: Generate final proof
 	proof, err := pok.GenProof(challenge)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate proof: %v", err)

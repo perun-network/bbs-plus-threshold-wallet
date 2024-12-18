@@ -20,15 +20,12 @@ func (proof *ProofG1) GetChallengeContribution(bases []*bls12381.PointG1, commit
 }
 
 func (proof *ProofG1) Verify(bases []*bls12381.PointG1, commitment *bls12381.PointG1, challenge *ProofChallenge) error {
-	// Step 1: Compute the challenge contribution using multi-scalar multiplication
 
 	contribution := proof.GetChallengeContribution(bases, commitment, challenge)
 
-	// Step 2: Subtract the stored commitment from the challenge contribution
 	g1 := bls12381.NewG1()
 	g1.Sub(contribution, contribution, &proof.Commitment)
 
-	// Step 3: Check if result is zero (identity element)
 	if g1.IsZero(contribution) {
 		return nil
 	}
@@ -68,7 +65,6 @@ type SignatureMessage struct {
 }
 
 func VerifyBBSProof(messagesBytes [][]byte, proof, nonce, pubKeyBytes []byte) error {
-
 	payload, err := ParsePoKPayload(proof)
 	if err != nil {
 		return fmt.Errorf("parse ParsePoKPayload failed : %w", err)
@@ -268,7 +264,6 @@ func ParseSignatureProof(sigProofBytes []byte) (*PoKOfSignatureProof, error) {
 	}
 
 	return &PoKOfSignatureProof{
-
 		APrime:   g1Points[0],
 		ABar:     g1Points[1],
 		D:        g1Points[2],

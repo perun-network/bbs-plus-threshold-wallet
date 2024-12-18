@@ -110,13 +110,26 @@ func GeneratePPPrecomputationNOutOfN(seedArray [16]uint8, tau, K, N int) (*bls12
 	return sk, skSeeds, livePreSignatures
 }
 
+func GeneratePCFPCGOutputMockedFromSecretKey(sk *bls12381.Fr, t int, k int, n int) PCFPCGOutput {
+	skShares := helper.GetShamirSharedRandomElementFromSecretKey(sk, t, n)
+
+	aShares := helper.GetRandomElements(k, n)
+	eShares := helper.GetRandomElements(k, n)
+	sShares := helper.GetRandomElements(k, n)
+	aeTerms := helper.MakeAllPartiesOLENoRNG(k, n, aShares, eShares)
+	asTerms := helper.MakeAllPartiesOLENoRNG(k, n, aShares, sShares)
+	askTerms := helper.MakeAllPartiesVOLENoRNG(k, n, aShares, skShares)
+
+	return PCFPCGOutput{sk, skShares, aShares, eShares, sShares, aeTerms, asTerms, askTerms}
+}
+
 func GeneratePCFPCGOutputMocked(seedArray [16]uint8, t int, k int, n int) PCFPCGOutput {
 	seed := int64(binary.BigEndian.Uint64(seedArray[:]))
 	rng := rand.New(rand.NewSource(seed))
 	sk, skShares := helper.GetShamirSharedRandomElement(rng, t, n)
-	aShares := helper.GetRandomElements(rng, k, n)
-	eShares := helper.GetRandomElements(rng, k, n)
-	sShares := helper.GetRandomElements(rng, k, n)
+	aShares := helper.GetRandomElementsFromSeed(rng, k, n)
+	eShares := helper.GetRandomElementsFromSeed(rng, k, n)
+	sShares := helper.GetRandomElementsFromSeed(rng, k, n)
 	aeTerms := helper.MakeAllPartiesOLE(rng, k, n, aShares, eShares)
 	asTerms := helper.MakeAllPartiesOLE(rng, k, n, aShares, sShares)
 	askTerms := helper.MakeAllPartiesVOLE(rng, k, n, aShares, skShares)
@@ -305,6 +318,75 @@ func CreatePPPrecomputationFromVOLEEvaluation(
 			Index:         iN,
 			SkShare:       skShares[iN],
 			PreSignatures: preSignatureList,
+		}
+	}
+
+	return precomputations
+}
+
+func CreatePPPrecomputationFromVOLEEvaluationWithPubKey(
+	k int,
+	n int,
+	publicKey *bls12381.PointG2,
+	skShares []*bls12381.Fr,
+	aShares, eShares, sShares [][]*bls12381.Fr,
+	aeTerms, asTerms, askTerms [][][]*helper.OLECorrelation,
+) []*fhksbbsplus.PerPartyPrecomputationsWithPubKey {
+	precomputations := make([]*fhksbbsplus.PerPartyPrecomputationsWithPubKey, n)
+	for iN := 0; iN < n; iN++ {
+		preSignatureList := make([]*fhksbbsplus.PerPartyPreSignature, k)
+
+		for iK := 0; iK < k; iK++ {
+			aeTermOwn := bls12381.NewFr().Set(aShares[iK][iN])
+			aeTermOwn.Mul(aeTermOwn, eShares[iK][iN])
+			asTermOwn := bls12381.NewFr().Set(aShares[iK][iN])
+			asTermOwn.Mul(asTermOwn, sShares[iK][iN])
+			askTermOwn := bls12381.NewFr().Set(aShares[iK][iN])
+			askTermOwn.Mul(askTermOwn, skShares[iN])
+
+			aeTermsA := make([]*bls12381.Fr, n)
+			aeTermsE := make([]*bls12381.Fr, n)
+			asTermsA := make([]*bls12381.Fr, n)
+			asTermsS := make([]*bls12381.Fr, n)
+			askTermsA := make([]*bls12381.Fr, n)
+			askTermsSK := make([]*bls12381.Fr, n)
+
+			for jN := 0; jN < n; jN++ {
+				aeTermsA[jN] = bls12381.NewFr()
+				aeTermsA[jN].Set(aeTerms[iK][iN][jN].U)
+				aeTermsE[jN] = bls12381.NewFr()
+				aeTermsE[jN].Set(aeTerms[iK][jN][iN].V)
+				asTermsA[jN] = bls12381.NewFr()
+				asTermsA[jN].Set(asTerms[iK][iN][jN].U)
+				asTermsS[jN] = bls12381.NewFr()
+				asTermsS[jN].Set(asTerms[iK][jN][iN].V)
+				askTermsA[jN] = bls12381.NewFr()
+				askTermsA[jN].Set(askTerms[iK][iN][jN].U)
+				askTermsSK[jN] = bls12381.NewFr()
+				askTermsSK[jN].Set(askTerms[iK][jN][iN].V)
+			}
+
+			preSignatureList[iK] = &fhksbbsplus.PerPartyPreSignature{
+				AShare:     aShares[iK][iN],
+				EShare:     eShares[iK][iN],
+				SShare:     sShares[iK][iN],
+				AeTermOwn:  aeTermOwn,
+				AsTermOwn:  asTermOwn,
+				AskTermOwn: askTermOwn,
+				AeTermsA:   aeTermsA,
+				AeTermsE:   aeTermsE,
+				AsTermsA:   asTermsA,
+				AsTermsS:   asTermsS,
+				AskTermsA:  askTermsA,
+				AskTermsSK: askTermsSK,
+			}
+		}
+
+		precomputations[iN] = &fhksbbsplus.PerPartyPrecomputationsWithPubKey{
+			Index:         iN,
+			SkShare:       skShares[iN],
+			PreSignatures: preSignatureList,
+			PublicKey:     publicKey,
 		}
 	}
 
