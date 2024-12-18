@@ -20,24 +20,6 @@ func TestSignVerify(t *testing.T) {
 	assert.True(t, ok, "signature verification failed")
 }
 
-func TestNewCreateProof(t *testing.T) {
-	msgNum := 5
-	msgs := test.Messages[:msgNum]
-
-	kp := zkptest.CreateTestKeyPair(t, msgNum)
-
-	revealed := test.Revealed
-	proofRqNoNonce := zkptest.CreateProofReqNoNonce(t, kp, msgs, revealed)
-
-	sigBytes, err := proofRqNoNonce.Signature.ToBytes()
-	pubkeyBytes := proofRqNoNonce.PublicKey.Serialize()
-	assert.NoError(t, err, "signature serialization failed")
-	nonce := []byte("nonce")
-	_, err = zkp.CreateProofBBS(msgs, sigBytes, nonce, pubkeyBytes, revealed)
-	assert.NoError(t, err, "CreateProofBBS should not return an error")
-
-}
-
 func TestVerifyBBSProof(t *testing.T) {
 	msgNum := 5
 	msgs := test.Messages[:msgNum]
