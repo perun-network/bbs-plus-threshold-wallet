@@ -41,6 +41,7 @@ func getShamirSharedRandomElement(rng *rand.Rand, t, n int) (*bls12381.Fr, []*bl
 		}
 		// only compute last share based on the other shares and the secret key
 		shares[n-1].Sub(secretKeyElement, shares[n-1])
+
 		return secretKeyElement, shares
 	}
 
@@ -611,9 +612,11 @@ func (p *PCG) embedVOLECorrelations(omega [][][]*big.Int, beta [][][]*bls12381.F
 			if i != j {
 				for r := 0; r < p.c; r++ {
 					skShareIndex := j
+
 					//if j > 1 {
 					//	skShareIndex = 1 // We do this here as we do not interpolate (for testing only)
 					//}
+
 
 					nonZeroElements := scalarMulFr(skShares[skShareIndex], beta[i][r])
 					key0, key1, err := p.dspfN.Gen(omega[i][r], frSliceToBigIntSlice(nonZeroElements))

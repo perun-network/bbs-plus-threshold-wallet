@@ -1,10 +1,10 @@
 package helper
 
 import (
+	"crypto/rand"
 	"encoding/binary"
-	"math/rand"
-
 	bls12381 "github.com/kilic/bls12-381"
+	"io"
 )
 
 func uint64ToFr(val uint64) *bls12381.Fr {
@@ -57,7 +57,7 @@ func Get0LagrangeCoefficientSetFr(indices []int) []*bls12381.Fr {
 }
 
 // GetShamirSharedRandomElement generates a t-out-of-n shamir secret sharing of a random element
-func GetShamirSharedRandomElement(rng *rand.Rand, t, n int) (*bls12381.Fr, []*bls12381.Fr) {
+func GetShamirSharedRandomElement(rng io.Reader, t, n int) (*bls12381.Fr, []*bls12381.Fr) {
 	// Generate the secret key element
 	secretKeyElement := bls12381.NewFr()
 	_, err := secretKeyElement.Rand(rng)
@@ -93,4 +93,37 @@ func GetShamirSharedRandomElement(rng *rand.Rand, t, n int) (*bls12381.Fr, []*bl
 		shares[i] = share
 	}
 	return secretKeyElement, shares
+}
+
+// ShamirSharedSecretKey generates a t-out-of-n shamir secret sharing of the provided secret key
+func ShamirSharedSecretKey(skey *bls12381.Fr, t, n int) []*bls12381.Fr {
+
+	coefficients := make([]*bls12381.Fr, t-1)
+	for i := 0; i < t-1; i++ {
+		coefficients[i] = bls12381.NewFr()
+		_, err := coefficients[i].Rand(rand.Reader)
+
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	// Shares
+	shares := make([]*bls12381.Fr, n)
+	for i := 0; i < n; i++ {
+		share := bls12381.NewFr()
+		share.Set(skey)
+
+		incrExponentiation := bls12381.NewFr().One()
+
+		for j := 0; j < t-1; j++ {
+			incrExponentiation.Mul(incrExponentiation, uint64ToFr(uint64(i+1)))
+			tmp := bls12381.NewFr().Set(coefficients[j])
+			tmp.Mul(tmp, incrExponentiation)
+			share.Add(share, tmp)
+		}
+
+		shares[i] = share
+	}
+	return shares
 }
