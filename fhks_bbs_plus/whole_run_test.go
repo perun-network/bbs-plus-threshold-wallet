@@ -1,12 +1,14 @@
 package fhks_bbs_plus_test
 
 import (
+	"testing"
+
 	bls12381 "github.com/kilic/bls12-381"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/perun-network/bbs-plus-threshold-wallet/fhks_bbs_plus"
 	"github.com/perun-network/bbs-plus-threshold-wallet/helper"
 	"github.com/perun-network/bbs-plus-threshold-wallet/precomputation"
-	"github.com/stretchr/testify/assert"
-	"testing"
 
 	"github.com/perun-network/bbs-plus-threshold-wallet/test"
 )
@@ -80,6 +82,7 @@ func TestSimpleSigningNOutOfN(t *testing.T) {
 
 	messages := helper.GetRandomMessagesFromSeed(test.SeedMessages, test.K, test.MessageCount)
 
+
 	sk, skSeeds, preComputation := precomputation.GeneratePPPrecomputationNOutOfN(test.SeedPresignatures, test.N, test.K, test.N)
 
 	for j := 0; j < test.K; j++ {
@@ -103,7 +106,6 @@ func TestSimpleSigningNOutOfN(t *testing.T) {
 		}
 
 		// compare result
-
 		assert.Equal(t, 0, totalSkShare.Cmp(seedSk))
 		ask := bls12381.NewFr() // = delta0
 		ask.Mul(totalAShare, totalSkShare)
