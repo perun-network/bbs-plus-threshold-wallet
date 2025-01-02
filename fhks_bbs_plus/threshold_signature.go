@@ -1,6 +1,10 @@
 package fhks_bbs_plus
 
-import bls12381 "github.com/kilic/bls12-381"
+import (
+	"fmt"
+	bls12381 "github.com/kilic/bls12-381"
+	"github.com/perun-network/bbs-plus-threshold-wallet/helper"
+)
 
 type ThresholdSignature struct {
 	CapitalA *bls12381.PointG1
@@ -14,6 +18,46 @@ func NewThresholdSignature() *ThresholdSignature {
 		E:        bls12381.NewFr().Zero(),
 		S:        bls12381.NewFr().Zero(),
 	}
+}
+func (s *ThresholdSignature) ToBytes() ([]byte, error) {
+	bytes := make([]byte, helper.LenBytesG1Compressed+2*helper.LenBytesFr)
+
+	g1 := bls12381.NewG1()
+	aCompressed := g1.ToCompressed(s.CapitalA)
+
+	copy(bytes[:helper.LenBytesG1Compressed], aCompressed)
+
+	eBytes := s.E.ToBytes()
+	copy(bytes[helper.LenBytesG1Compressed:helper.LenBytesG1Compressed+helper.LenBytesFr], eBytes)
+
+	sBytes := s.S.ToBytes()
+	copy(bytes[helper.LenBytesG1Compressed+helper.LenBytesFr:], sBytes)
+
+	return bytes, nil
+}
+
+func ThresholdSignatureFromBytes(data []byte) (*ThresholdSignature, error) {
+	if len(data) != helper.LenBytesG1Compressed+2*helper.LenBytesFr {
+		return nil, fmt.Errorf("invalid serialized signature length: expected %d, got %d", helper.LenBytesG1Compressed+2*helper.LenBytesFr, len(data))
+	}
+
+	g1 := bls12381.NewG1()
+	capitalA, err := g1.FromCompressed(data[:helper.LenBytesG1Compressed])
+	if err != nil {
+		return nil, fmt.Errorf("failed to deserialize CapitalA: %v", err)
+	}
+
+	e := bls12381.NewFr()
+	e.FromBytes(data[helper.LenBytesG1Compressed : helper.LenBytesG1Compressed+helper.LenBytesFr])
+
+	s := bls12381.NewFr()
+	s.FromBytes(data[helper.LenBytesG1Compressed+helper.LenBytesFr:])
+
+	return &ThresholdSignature{
+		CapitalA: capitalA,
+		E:        e,
+		S:        s,
+	}, nil
 }
 
 func (ts *ThresholdSignature) FromPartialSignatures(partialSignatures []*PartialThresholdSignature) *ThresholdSignature {
@@ -75,7 +119,6 @@ func (ts *ThresholdSignature) FromSecretKey(
 }
 
 func (ts *ThresholdSignature) Verify(messages []*bls12381.Fr, pk *PublicKey) bool {
-	// Compute basis for verification
 	g1 := bls12381.NewG1()
 	h0s := g1.New().Set(pk.H0)
 	g1.MulScalar(h0s, h0s, ts.S)

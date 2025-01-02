@@ -1,6 +1,10 @@
 package fhks_bbs_plus
 
-import bls12381 "github.com/kilic/bls12-381"
+import (
+	"fmt"
+	bls12381 "github.com/kilic/bls12-381"
+	"github.com/perun-network/bbs-plus-threshold-wallet/helper"
+)
 
 type PartialThresholdSignature struct {
 	CapitalAShare *bls12381.PointG1
@@ -28,7 +32,6 @@ func NewPartialThresholdSignatureFromValues(capitalAShare *bls12381.PointG1, del
 }
 
 func (pts *PartialThresholdSignature) New(messages []*bls12381.Fr, pk *PublicKey, preSignature *LivePreSignature) *PartialThresholdSignature {
-	//message-dependent term
 	g1 := bls12381.NewG1()
 	basis := bls12381.NewG1().One()
 
@@ -38,7 +41,6 @@ func (pts *PartialThresholdSignature) New(messages []*bls12381.Fr, pk *PublicKey
 		g1.Add(basis, basis, tmp)
 	}
 
-	// Share of A
 	capitalAShare := g1.New().Set(basis)
 	g1.MulScalar(capitalAShare, capitalAShare, preSignature.AShare)
 	tmp := g1.New().Set(pk.H0)
@@ -50,4 +52,52 @@ func (pts *PartialThresholdSignature) New(messages []*bls12381.Fr, pk *PublicKey
 	pts.EShare.Set(preSignature.EShare)
 	pts.SShare.Set(preSignature.SShare)
 	return pts
+}
+
+func (pts *PartialThresholdSignature) ToBytes() ([]byte, error) {
+	g1 := bls12381.NewG1()
+
+	bytes := make([]byte, 0)
+
+	capitalAShareBytes := g1.ToCompressed(pts.CapitalAShare)
+	bytes = append(bytes, capitalAShareBytes...)
+
+	deltaShareBytes := pts.DeltaShare.ToBytes()
+	bytes = append(bytes, deltaShareBytes...)
+
+	eShareBytes := pts.EShare.ToBytes()
+	bytes = append(bytes, eShareBytes...)
+
+	sShareBytes := pts.SShare.ToBytes()
+	bytes = append(bytes, sShareBytes...)
+
+	return bytes, nil
+}
+
+func PartThreshSigFromBytes(partSigBytes []byte) (*PartialThresholdSignature, error) {
+	g1 := bls12381.NewG1()
+
+	fmt.Println("len of partSigBytes: ", len(partSigBytes))
+
+	capitalAShare, err := g1.FromCompressed(partSigBytes[:helper.LenBytesG1Compressed])
+	if err != nil {
+		return nil, fmt.Errorf("deserialize G1 compressed signature: %w", err)
+	}
+
+	offset := helper.LenBytesG1Compressed
+
+	deltaShare := bls12381.NewFr().FromBytes(partSigBytes[offset : offset+helper.LenBytesFr])
+	offset += helper.LenBytesFr
+
+	eShare := bls12381.NewFr().FromBytes(partSigBytes[offset : offset+helper.LenBytesFr])
+	offset += helper.LenBytesFr
+
+	sShare := bls12381.NewFr().FromBytes(partSigBytes[offset:])
+
+	return &PartialThresholdSignature{
+		CapitalAShare: capitalAShare,
+		DeltaShare:    deltaShare,
+		EShare:        eShare,
+		SShare:        sShare,
+	}, nil
 }
