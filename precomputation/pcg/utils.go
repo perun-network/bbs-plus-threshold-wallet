@@ -27,19 +27,21 @@ func getShamirSharedRandomElement(rng *rand.Rand, t, n int) (*bls12381.Fr, []*bl
 		panic(err)
 	}
 
-	// TODO: This should be removed, rather the tests should be fixed to combine the secret key shares correctly using Lagrange.
+	// TODO: Maybe only required for the tests
 	if t == n {
 		shares := make([]*bls12381.Fr, n)
-		shares[n-1] = bls12381.NewFr().FromBytes(secretKeyElement.ToBytes())
+		shares[n-1] = bls12381.NewFr().Zero()
 		for i := 0; i < n-1; i++ {
-			share := bls12381.NewFr()
-			share, err = share.Rand(rng)
+			shares[i] = bls12381.NewFr()
+			_, err := shares[i].Rand(rng)
 			if err != nil {
 				panic(err)
 			}
-			shares[i] = share
-			shares[n-1].Sub(shares[n-1], share)
+			shares[n-1].Add(shares[n-1], shares[i])
 		}
+		// only compute last share based on the other shares and the secret key
+		shares[n-1].Sub(secretKeyElement, shares[n-1])
+
 		return secretKeyElement, shares
 	}
 
@@ -610,6 +612,11 @@ func (p *PCG) embedVOLECorrelations(omega [][][]*big.Int, beta [][][]*bls12381.F
 			if i != j {
 				for r := 0; r < p.c; r++ {
 					skShareIndex := j
+
+					//if j > 1 {
+					//	skShareIndex = 1 // We do this here as we do not interpolate (for testing only)
+					//}
+
 
 					nonZeroElements := scalarMulFr(skShares[skShareIndex], beta[i][r])
 					key0, key1, err := p.dspfN.Gen(omega[i][r], frSliceToBigIntSlice(nonZeroElements))

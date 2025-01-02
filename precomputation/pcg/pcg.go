@@ -163,6 +163,8 @@ func (p *PCG) TrustedSeedGen() ([]*Seed, error) {
 	sEpsilon := p.sampleCoefficients() // s
 
 	// 3. Embed first part of delta (delta0) correlation (sk*a)
+	// TODO: When Party i and Party j evaluate the DPF (Check indixes to determine which of the DPFs) at position aOmega_i, the sum should be value aBeta_i * sk_j. Check if this indeed holds
+	// TODO: If you do not find such a relation, the problem occurs here, otherwise we will have to look at the expansion (to discuss)
 	U, err := p.embedVOLECorrelations(aOmega, aBeta, skShares)
 	if err != nil {
 		return nil, fmt.Errorf("step 3: failed to generate DSPF keys for first part of delta VOLE correlation (sk * a): %w", err)
@@ -256,9 +258,9 @@ func (p *PCG) SeedGenWithSk() (*bls12381.Fr, []*Seed, error) {
 	for i := 0; i < p.n; i++ {
 		// FIXME key index is always 1??
 		keyIndex := i
-		if i > 1 {
-			keyIndex = 1 // We set the key index for all parties > 1 to 1, as we do not interpolate the key shares (only for testing as this has no performance impact on Eval)
-		}
+		//if i > 1 {
+		//	keyIndex = 1 // We set the key index for all parties > 1 to 1, as we do not interpolate the key shares (only for testing as this has no performance impact on Eval)
+		//}
 		seeds[i] = &Seed{
 			index: i,
 			ski:   skShares[keyIndex],
