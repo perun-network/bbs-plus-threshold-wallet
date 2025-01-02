@@ -95,8 +95,8 @@ func GetShamirSharedRandomElement(rng io.Reader, t, n int) (*bls12381.Fr, []*bls
 	return secretKeyElement, shares
 }
 
-// GetShamirSharedRandomElement generates a t-out-of-n shamir secret sharing of a random element, using a provided secret key
-func GetShamirSharedRandomElementFromSecretKey(skey *bls12381.Fr, t, n int) []*bls12381.Fr {
+// ShamirSharedSecretKey generates a t-out-of-n shamir secret sharing of the provided secret key
+func ShamirSharedSecretKey(skey *bls12381.Fr, t, n int) []*bls12381.Fr {
 
 	coefficients := make([]*bls12381.Fr, t-1)
 	for i := 0; i < t-1; i++ {

@@ -69,12 +69,8 @@ func TestPerPartyPreSignatureSerializationDeserialization(t *testing.T) {
 	dataSerialized, err := preSigOriginal.ToBytes()
 	assert.NoError(t, err)
 
-	preSigDeserialized, asshare, err := fhks_bbs_plus.FromBytes(dataSerialized)
+	preSigDeserialized, _, err := fhks_bbs_plus.FromBytes(dataSerialized)
 	assert.NoError(t, err)
-
-	fmt.Println("preSigOriginal.AShare: ", preSigOriginal.AShare)
-	fmt.Println("preSigDeserialized.AShare: ", preSigDeserialized.AShare)
-	fmt.Println("preSigDeserialized asshare: ", asshare)
 
 	assert.True(t,
 		preSigOriginal.AShare.Equal(preSigDeserialized.AShare), "AShare mismatch")

@@ -111,7 +111,7 @@ func GeneratePPPrecomputationNOutOfN(seedArray [16]uint8, tau, K, N int) (*bls12
 }
 
 func GeneratePCFPCGOutputMockedFromSecretKey(sk *bls12381.Fr, t int, k int, n int) PCFPCGOutput {
-	skShares := helper.GetShamirSharedRandomElementFromSecretKey(sk, t, n)
+	skShares := helper.ShamirSharedSecretKey(sk, t, n)
 
 	aShares := helper.GetRandomElements(k, n)
 	eShares := helper.GetRandomElements(k, n)
