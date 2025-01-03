@@ -1,16 +1,15 @@
-# Go BBS+ Threshold Signature
+# Threshold BBS+ from Pseudorandom Correlations Implementation
 
 ## Description
-This repository serves as the Go implementation for the BBS+ Threshold Signature Algorithm, as discussed in the paper [Non-Interactive Threshold BBS+ From Pseudorandom Correlations](https://eprint.iacr.org/2023/1076.pdf) (Faust et al., 2023).
 
-This repository includes three main components of a BBS+ Threshold signature generation protocol. Firstly, the precomputation phase, which is the distribution and generation of precomputed shares. Secondly, the online phase, which uses the aforementioned precomputed shares to generate and verify BBS+ signatures.
+This repository serves as the Go implementation for the BBS+ Threshold Signature Algorithm, as proposed in the paper [Non-Interactive Threshold BBS+ From Pseudorandom Correlations](https://eprint.iacr.org/2023/1076.pdf) (Faust et al., 2023).
+
+It contains three main components of a BBS+ Threshold signature generation protocol. Firstly, the precomputation phase, which is the distribution and generation of precomputed shares. Secondly, the online phase, which uses the aforementioned precomputed shares to generate and verify BBS+ signatures.
 
 
-The online phase of the signing protocol is based on the Rust implementation [here](https://hessenbox.tu-darmstadt.de/dl/fiEEnH9zJezsDorYTsBke7XT/.dir). The offline phase is based on [this](https://github.com/leandro-ro/Threshold-BBS-Plus-PCG) implementation and is being integrated into this repository with the permission of the original author.
+The online phase of the signing protocol is based on the Rust implementation [here](https://github.com/AppliedCryptoGroup/NI-Threshold-BBS-Plus-Code). It is also published [here](https://github.com/AppliedCryptoGroup/NI-Threshold-BBS-Plus-Code). The offline phase is based on [this](https://github.com/leandro-ro/Threshold-BBS-Plus-PCG) implementation and is being integrated into this repository with the permission of the original author.
 
 Additionally, this repository includes a Zero Knowledge Proof (zkp) package, allowing users to sign messages without exposing the messages and the respective signature. The proof generation and verification protocol is based on [this publication](https://eprint.iacr.org/2016/663.pdf). The implementation itself is functionally equivalent to the Rust implementation [here](https://github.com/mattrglobal/bbs-signatures), and also the Golang code in the [Hyperledger Aries Framework](https://github.com/hyperledger-archives/aries-framework-go/tree/main/pkg/crypto/primitive/bbs12381g2pub).
-
-
 
 ## Structure
 **fhks_bbs_plus** defines the cryptographic material for the BBS+ Threshold Signature. It provides the properties to sign and verify using BBS+ keypairs.
