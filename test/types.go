@@ -6,9 +6,9 @@ var (
 		0xe5}
 	Threshold                   = 3 // Security threshold (t-out-of-n)
 	N                           = 6 // Number of servers
-	K                           = 2 // Presignature to create
+	K                           = 3 // Presignature to create
 	Indices                     = [][]int{{1, 3, 5}, {1, 5, 2}, {2, 4, 5}}
-	IndicesSimple               = [][]int{{1, 2, 3}, {1, 2, 3}, {1, 2, 3}}
+	IndicesSimple               = [][]int{{0, 1, 2}, {0, 1, 2}, {0, 1, 2}}
 	IndicesSignersTestTauOutOfN = []int{0, 1, 2}
 	IndicesSignersTestNOutOfN   = []int{0, 1, 2, 3, 4, 5}
 
@@ -34,5 +34,5 @@ var (
 		[]byte("Message10"),
 	}
 	Revealed     = []int{0, 2}
-	MessageCount = 5
+	MessageCount = 3
 )

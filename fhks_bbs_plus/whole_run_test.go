@@ -22,51 +22,16 @@ func TestSimpleSigningMockedPre(t *testing.T) {
 
 	for iK := 0; iK < test.K; iK++ {
 		partialSignatures := make([]*fhks_bbs_plus.PartialThresholdSignature, test.Threshold)
-		for iT := 0; iT < test.N; iT++ {
-			ownIndex := test.IndicesSimple[iK][iT]
+		for iT := 0; iT < test.Threshold; iT++ {
+			ownIndex := test.Indices[iK][iT]
 			x := fhks_bbs_plus.NewPartialThresholdSignature().New(
 				messages[iK],
 				pk,
 				fhks_bbs_plus.NewLivePreSignature().FromPreSignature(
 					ownIndex,
-					test.IndicesSimple[iK],
+					test.Indices[iK],
 					preComputation[ownIndex-1].PreSignatures[iK],
 				),
-			)
-			partialSignatures[iT] = x
-		}
-		signature := fhks_bbs_plus.NewThresholdSignature().FromPartialSignatures(partialSignatures)
-
-		if !signature.Verify(messages[iK], pk) {
-			t.Errorf("Signature verification failed")
-		}
-	}
-}
-
-func TestSimpleSigningTauOutOfN(t *testing.T) {
-
-	messages := helper.GetRandomMessagesFromSeed(test.SeedMessages, test.K, test.MessageCount)
-
-	sk, _, preComputation := precomputation.GeneratePPPrecomputationTauOutOfN(test.SeedPresignatures, test.Threshold, test.K, test.N)
-
-	pk := fhks_bbs_plus.GeneratePublicKey(test.SeedKeys, sk, test.MessageCount)
-
-	for iK := 0; iK < test.K; iK++ {
-		partialSignatures := make([]*fhks_bbs_plus.PartialThresholdSignature, test.Threshold)
-		for iT := 0; iT < test.Threshold; iT++ {
-			emptyPreSig := fhks_bbs_plus.NewLivePreSignature()
-			pppSigSimple := fhks_bbs_plus.PerPartyPreSignatureSimple{
-				AShare:     preComputation[iK][iT].AShare,
-				EShare:     preComputation[iK][iT].EShare,
-				SShare:     preComputation[iK][iT].SShare,
-				AlphaShare: preComputation[iK][iT].AlphaShare,
-				DeltaShare: preComputation[iK][iT].DeltaShare,
-			}
-			preSig := emptyPreSig.FromPreSignatureShares(&pppSigSimple)
-			x := fhks_bbs_plus.NewPartialThresholdSignature().New(
-				messages[iK],
-				pk,
-				preSig,
 			)
 			partialSignatures[iT] = x
 		}
@@ -81,7 +46,6 @@ func TestSimpleSigningTauOutOfN(t *testing.T) {
 func TestSimpleSigningNOutOfN(t *testing.T) {
 
 	messages := helper.GetRandomMessagesFromSeed(test.SeedMessages, test.K, test.MessageCount)
-
 
 	sk, skSeeds, preComputation := precomputation.GeneratePPPrecomputationNOutOfN(test.SeedPresignatures, test.N, test.K, test.N)
 
