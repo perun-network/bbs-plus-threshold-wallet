@@ -176,6 +176,7 @@ func TestPCGCombinedEnd2EndTau3N3(t *testing.T) {
 
 func TestRootsOfUnity(t *testing.T) {
 	pcg, err := NewPCG(128, 10, 2, 2, 2, 4) // Small lpn parameters for testing.
+	assert.Nil(t, err)
 
 	ring, err := pcg.GetRing(false)
 	assert.Nil(t, err)

@@ -24,8 +24,8 @@ func TestSingleOLE(t *testing.T) {
 	assert.NotNil(t, ring)
 
 	x0, z0, err := pcg.evalSingleOle(seeds[0], randPolys, ring.Div)
+	assert.Nil(t, err)
 	x1, z1, err := pcg.evalSingleOle(seeds[1], randPolys, ring.Div)
-
 	assert.Nil(t, err)
 	assert.NotNil(t, x0)
 	assert.NotNil(t, z0)
@@ -71,8 +71,8 @@ func TestSingleVOLE(t *testing.T) {
 	assert.NotNil(t, ring)
 
 	x0, z0, err := pcg.evalSingleVole(seeds[0], randPolys, ring.Div)
+	assert.Nil(t, err)
 	x1, z1, err := pcg.evalSingleVole(seeds[1], randPolys, ring.Div) // x1 contains constant
-
 	assert.Nil(t, err)
 	assert.NotNil(t, x0)
 	assert.NotNil(t, z0)

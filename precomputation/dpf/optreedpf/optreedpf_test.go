@@ -107,6 +107,7 @@ func TestOpTreeDPFGenAndEvalToZero(t *testing.T) {
 	res1, err := d.Eval(k1, x)
 	assert.Nil(t, err)
 	res2, err := d.Eval(k2, x)
+	assert.Nil(t, err)
 	assert.Equal(t, y, d.CombineResults(res1, res2))
 
 	res1, err = d.Eval(k1, wx1)

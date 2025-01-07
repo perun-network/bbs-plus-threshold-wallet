@@ -160,9 +160,8 @@ func (d *OpTreeDPF) Gen(specialPointX *big.Int, nonZeroElementY *big.Int) (dpf.K
 
 		sCW := dpf.XORBytes(sTmp[ALICE][loose], sTmp[BOB][loose])
 		tCW := make([]bool, 2)
-		tCW[L] = tTmp[ALICE][L] != tTmp[BOB][L] != alphaBool != true // != is eq to XOR
+		tCW[L] = !tTmp[ALICE][L] != tTmp[BOB][L] != alphaBool // != is eq to XOR
 		tCW[R] = tTmp[ALICE][R] != tTmp[BOB][R] != alphaBool
-
 		CW[i-1] = CorrectionWord{
 			S:  sCW,
 			Tl: tCW[L],
@@ -191,6 +190,9 @@ func (d *OpTreeDPF) Gen(specialPointX *big.Int, nonZeroElementY *big.Int) (dpf.K
 	finalSeedAlice := new(big.Int).SetBytes(s[ALICE][n])
 	finalSeedBob := new(big.Int).SetBytes(s[BOB][n])
 	res, err := d.genGroupCalc(finalSeedAlice, finalSeedBob, beta, t[BOB][n])
+	if err != nil {
+		return nil, nil, err
+	}
 
 	CW[n] = CorrectionWord{
 		S:  res,
@@ -376,9 +378,7 @@ func (d *OpTreeDPF) traverse(s []byte, t bool, CW *map[int]CorrectionWord, i int
 			return nil, err
 		}
 
-		// Clear the parent slice to free memory
-		tau = nil
-
+		defer func() { tau = nil }()
 		left, err := d.traverse(sl, tl, CW, i-1, partyID)
 		if err != nil {
 			return nil, err

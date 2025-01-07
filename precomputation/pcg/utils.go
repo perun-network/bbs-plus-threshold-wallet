@@ -273,35 +273,6 @@ func frSliceToBigIntSlice(s []*bls12381.Fr) []*big.Int {
 	return result
 }
 
-func hasDuplicates(slice []*big.Int) bool {
-	seen := make(map[string]struct{})
-	for _, value := range slice {
-		// Convert *big.Int to a string for comparison, as map keys need to be comparable
-		strValue := value.String()
-		if _, exists := seen[strValue]; exists {
-			// Duplicate found
-			return true
-		}
-		seen[strValue] = struct{}{}
-	}
-	return false
-}
-
-func aggregateDSPFoutput(output [][]*big.Int) []*bls12381.Fr {
-	sums := make([]*bls12381.Fr, len(output[0]))
-	for i := 0; i < len(output[0]); i++ {
-		for j := 0; j < len(output); j++ {
-			if sums[i] == nil {
-				sums[i] = bls12381.NewFr()
-			}
-			val := bls12381.NewFr().FromBytes(output[j][i].Bytes())
-			sums[i].Add(sums[i], val)
-		}
-	}
-
-	return sums
-}
-
 // primeFactor represents a prime factor and its exponent.
 type primeFactor struct {
 	Factor   *big.Int // The prime factor
@@ -485,7 +456,7 @@ func (p *PCG) evalFinalShare2D(w [][]*poly.Polynomial, oprand []*poly.Polynomial
 }
 
 // evalVOLEwithSeed evaluates the VOLE correlation with the given seed.
-func (p *PCG) evalVOLEwithSeed(u []*poly.Polynomial, seedSk *bls12381.Fr, seedDSPFKeys [][][]*DSPFKeyPair, seedIndex int, div *poly.Polynomial) ([]*poly.Polynomial, error) {
+func (p *PCG) evalVOLEwithSeed(u []*poly.Polynomial, seedSk *bls12381.Fr, seedDSPFKeys [][][]*DSPFKeyPair, seedIndex int) ([]*poly.Polynomial, error) {
 	utilde := make([]*poly.Polynomial, p.c)
 	for r := 0; r < p.c; r++ {
 		ur := u[r].DeepCopy()    // We need unmodified u[r] later on, so we copy it
@@ -511,7 +482,7 @@ func (p *PCG) evalVOLEwithSeed(u []*poly.Polynomial, seedSk *bls12381.Fr, seedDS
 }
 
 // evalOLEwithSeed evaluates the OLE correlation with the given seed.
-func (p *PCG) evalOLEwithSeed(u, v []*poly.Polynomial, seedDSPFKeys [][][][]*DSPFKeyPair, seedIndex int, div *poly.Polynomial) ([][]*poly.Polynomial, error) {
+func (p *PCG) evalOLEwithSeed(u, v []*poly.Polynomial, seedDSPFKeys [][][][]*DSPFKeyPair, seedIndex int) ([][]*poly.Polynomial, error) {
 	w := make([][]*poly.Polynomial, p.c)
 	for r := 0; r < p.c; r++ {
 		w[r] = make([]*poly.Polynomial, p.c)
@@ -616,7 +587,6 @@ func (p *PCG) embedVOLECorrelations(omega [][][]*big.Int, beta [][][]*bls12381.F
 					//if j > 1 {
 					//	skShareIndex = 1 // We do this here as we do not interpolate (for testing only)
 					//}
-
 
 					nonZeroElements := scalarMulFr(skShares[skShareIndex], beta[i][r])
 					key0, key1, err := p.dspfN.Gen(omega[i][r], frSliceToBigIntSlice(nonZeroElements))

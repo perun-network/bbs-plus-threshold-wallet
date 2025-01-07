@@ -253,7 +253,6 @@ func (p *Polynomial) Add(q *Polynomial) {
 			p.Coefficients[exp] = bls12381.NewFr().FromBytes(coeff.ToBytes())
 		}
 	}
-	return
 }
 
 // SparseBigAdd adds a slice of big.Int to a polynomial and stores the result in the polynomial the function is being called on.
@@ -487,36 +486,6 @@ func (p *Polynomial) modNaive(divisor *Polynomial) (*Polynomial, error) {
 	}
 
 	return remainder, nil
-}
-
-// isCyclotomic checks if the polynomial is a cyclotomic polynomial of form x^n + 1.
-// we only consider cyclotomic polynomials with n being a power of 2.
-func (p *Polynomial) isCyclotomic() bool {
-	degree, err := p.Degree()
-	if err != nil {
-		return false
-	}
-	if degree == 0 {
-		return false
-	}
-
-	one := bls12381.NewFr().One()
-	if val, ok := p.Coefficients[degree]; ok {
-		if !val.Equal(one) {
-			return false
-		}
-	} else {
-		return false
-	}
-	if val, ok := p.Coefficients[0]; ok {
-		if !val.Equal(one) {
-			return false
-		}
-	} else {
-		return false
-	}
-
-	return true
 }
 
 // mulNaive multiplies two polynomials using the naive method in O(n^2).

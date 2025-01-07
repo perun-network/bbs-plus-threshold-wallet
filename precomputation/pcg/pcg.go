@@ -318,7 +318,7 @@ func (p *PCG) EvalCombined(seed *Seed, rand []*poly.Polynomial, div *poly.Polyno
 
 	// 2. Process VOLE (u) with seed / delta0 = ask
 	startVole := time.Now()
-	utilde, err := p.evalVOLEwithSeed(u, seed.ski, seed.U, seed.index, div)
+	utilde, err := p.evalVOLEwithSeed(u, seed.ski, seed.U, seed.index)
 	if err != nil {
 		return nil, fmt.Errorf("step 2: failed to evaluate VOLE (utilde): %w", err)
 	}
@@ -328,7 +328,7 @@ func (p *PCG) EvalCombined(seed *Seed, rand []*poly.Polynomial, div *poly.Polyno
 
 	// 3. Process first OLE correlation (u, k) with seed / alpha = as
 	startOle := time.Now()
-	w, err := p.evalOLEwithSeed(u, k, seed.C, seed.index, div)
+	w, err := p.evalOLEwithSeed(u, k, seed.C, seed.index)
 	if err != nil {
 		return nil, fmt.Errorf("step 3: failed to evaluate OLE (w): %w", err)
 	}
@@ -338,7 +338,7 @@ func (p *PCG) EvalCombined(seed *Seed, rand []*poly.Polynomial, div *poly.Polyno
 
 	// 4. Process second OLE correlation (u, v) with seed /  delta1 = ae
 	startOle2 := time.Now()
-	m, err := p.evalOLEwithSeed(u, v, seed.V, seed.index, div)
+	m, err := p.evalOLEwithSeed(u, v, seed.V, seed.index)
 	if err != nil {
 		return nil, fmt.Errorf("step 4: failed to evaluate OLE (m): %w", err)
 	}
