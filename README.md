@@ -2,7 +2,7 @@
 
 ## Description
 
-This repository serves as the Go implementation for the BBS+ Threshold Signature Algorithm, as proposed in the paper [Non-Interactive Threshold BBS+ From Pseudorandom Correlations](https://eprint.iacr.org/2023/1076.pdf) (Faust et al., 2023).
+This repository serves as the Go implementation for the BBS+ Threshold Signature Algorithm, as proposed in the paper [Non-Interactive Threshold BBS+ From Pseudorandom Correlations](https://eprint.iacr.org/2023/1076) (Faust et al., 2023).
 
 It contains three main components of a BBS+ Threshold signature generation protocol. Firstly, the precomputation phase, which is the distribution and generation of precomputed shares. Secondly, the online phase, which uses the aforementioned precomputed shares to generate and verify BBS+ signatures.
 
@@ -23,20 +23,21 @@ Additionally, this repository includes a Zero Knowledge Proof (zkp) package, all
 **measurements** and **tests** are demonstrators and benchmarking for the procedure of threshold signing.
 
 ## Test
-To run the tests, use the following command. 
+To run the tests, use the following command:
 
 ```
 go test -v ./...
 ```
 
 ## Benchmark
+To run the benchmarks, use the following command:
 
 ```
 go run .
 ```
 
 ## Related works
-This repository is part of a project researching the use case of Threshold BBS+ in Credential Issuance.
+This repository is part of a project researching the use case of Threshold BBS+ for decentralized (anonymous) credential issuance.
 
 [Threshold-Integrated-AF-GO](https://github.com/perun-network/aries-framework-go): A fork of Hyperledger Aries Framework Go with the integration of Threshold BBS+, see `pkg/client/vcwallet`.
 
