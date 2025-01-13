@@ -1,0 +1,38 @@
+package test
+
+var (
+	SeedPre = [16]uint8{
+		0x59, 0x62, 0xbe, 0x5d, 0x76, 0x3d, 0x31, 0x8d, 0x17, 0xdb, 0x37, 0x32, 0x54, 0x06, 0xbc,
+		0xe5}
+	Threshold                   = 3 // Security threshold (t-out-of-n)
+	N                           = 6 // Number of servers
+	K                           = 3 // Presignature to create
+	Indices                     = [][]int{{1, 3, 5}, {1, 5, 2}, {2, 4, 5}}
+	IndicesSimple               = [][]int{{0, 1, 2}, {0, 1, 2}, {0, 1, 2}}
+	IndicesSignersTestTauOutOfN = []int{0, 1, 2}
+	IndicesSignersTestNOutOfN   = []int{0, 1, 2, 3, 4, 5}
+
+	SeedPresignatures = [16]uint8{
+		0x59, 0x62, 0xbe, 0x5d, 0x76, 0x3d, 0x31, 0x8d, 0x17, 0xdb, 0x37, 0x32, 0x54, 0x06, 0xbc,
+		0xe5}
+	SeedMessages = [16]uint8{
+		0x59, 0x62, 0xbe, 0x5d, 0x76, 0xaa, 0x31, 0x8d, 0x17, 0x14, 0x37, 0x32, 0x37, 0x06, 0xac,
+		0xe5}
+	SeedKeys = [16]uint8{
+		0x59, 0x62, 0xaa, 0x5d, 0x76, 0xaa, 0xbb, 0x8d, 0x17, 0x14, 0x37, 0x32, 0x37, 0xcc, 0xac,
+		0xe5}
+	Messages = [][]byte{
+		[]byte("Message1"),
+		[]byte("Message2"),
+		[]byte("Message3"),
+		[]byte("Message4"),
+		[]byte("Message5"),
+		[]byte("Message6"),
+		[]byte("Message7"),
+		[]byte("Message8"),
+		[]byte("Message9"),
+		[]byte("Message10"),
+	}
+	Revealed     = []int{0, 2}
+	MessageCount = 3
+)

@@ -41,7 +41,7 @@ func SimpleMeasurementWithCoefficientComputation() {
 
 	directES := helper.GetRandomMessagesFromSeed(seedKeys, k, 2)
 
-	sk, preComputation := precomputation.GeneratePPPrecomputation(
+	sk, preComputation := precomputation.GeneratePPPrecomputationMock(
 		seedPresignatures, t, k, n)
 
 	pk := fhks_bbs_plus.GeneratePublicKey(seedKeys, sk, messageCount)
